@@ -166,58 +166,10 @@ const Icon = ({ type, size = 22, className = '' }) => {
     }
 };
 
-const ComericafinLogo = ({ light = false }) => {
-    return (
-        <div className="flex items-center gap-2">
-            <div
-                className={`flex h-9 w-9 items-center justify-center rounded-full border-2 ${
-                    light
-                        ? 'border-[#f5c842] text-[#f5c842]'
-                        : 'border-[#51169a] text-[#51169a]'
-                }`}
-            >
-                <svg
-                    width="22"
-                    height="22"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.7"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                >
-                    <path d="M12 3L20 7V12C20 17 16.8 20 12 21C7.2 20 4 17 4 12V7L12 3Z" />
-                    <path d="M8 12L10.5 14.5L16 9" />
-                </svg>
-            </div>
-            <div>
-                <p
-                    className={`text-sm font-bold tracking-[0.14em] ${
-                        light ? 'text-white' : 'text-[#35106e]'
-                    }`}
-                >
-                    COMERICAFIN
-                </p>
-                <p
-                    className={`text-[7px] font-medium tracking-[0.22em] ${
-                        light ? 'text-[#f5c842]' : 'text-[#8a6aae]'
-                    }`}
-                >
-                    BANKING SIMULATION
-                </p>
-            </div>
-        </div>
-    );
-};
-
 export default function Dashboard({ user, transactions = [] }) {
     const [showCardRequest, setShowCardRequest] = useState(false);
 
     const customerName = user?.name || 'Customer';
-    const profilePicture = user?.profile_picture
-        ? `/storage/${user.profile_picture}`
-        : null;
-    const firstName = customerName.trim().split(' ')[0] || 'Customer';
 
     const checkingBalance = formatCurrency(user?.balance);
     const savingsBalance = formatCurrency(user?.savings_balance);
@@ -229,157 +181,208 @@ export default function Dashboard({ user, transactions = [] }) {
         <CustomerLayout user={user}>
             <Head title="Customer Dashboard" />
 
-            <div className="min-h-screen bg-[#faf9fc] text-[#17152b]">
+            <div className="min-h-screen bg-[#eeeeee] text-[#17152b]">
+
                 <div className="mx-auto w-full max-w-[1500px] px-4 py-6 sm:px-6 lg:px-8">
 
-                    {/* WELCOME BANNER */}
-                    <section className="relative mb-7 overflow-hidden rounded-2xl border border-[#e8def5] bg-gradient-to-r from-[#faf5ff] via-white to-[#fbf8ff] px-5 py-6 sm:px-7 lg:px-8">
-                        <div className="pointer-events-none absolute -right-16 -top-20 h-64 w-64 rounded-full border-[45px] border-[#51169a]/5" />
-                        <div className="relative flex flex-col justify-between gap-6 md:flex-row md:items-center">
-                            <div className="flex items-center gap-4">
-                                <div className="flex items-center gap-4">
-                                    <div className="h-14 w-14 overflow-hidden rounded-full border-2 border-[#d8c4ed] bg-[#51169a] shadow-sm">
-                                        {user?.profile_picture ? (
-                                            <img
-                                                src={`/storage/${user.profile_picture}`}
-                                                alt={customerName}
-                                                className="h-full w-full object-cover"
-                                            />
-                                        ) : (
-                                            <div className="flex h-full w-full items-center justify-center text-lg font-bold text-white">
-                                                {customerName.charAt(0).toUpperCase()}
-                                            </div>
-                                        )}
-                                    </div>
+                    {/* DASHBOARD HEADER */}
+                    <section className="relative mb-8 overflow-hidden rounded-[24px] border border-[#8f671d] bg-gradient-to-br from-[#9b741f] via-[#80601a] to-[#5e4512] px-5 py-7 shadow-[0_12px_35px_rgba(80,55,10,0.25)] sm:px-7 lg:px-9">
+
+                        <div className="pointer-events-none absolute -right-24 -top-28 h-80 w-80 rounded-full border-[34px] border-white/10" />
+
+                        <div className="pointer-events-none absolute -right-10 top-10 h-64 w-64 rounded-full border border-[#fff5c4]/20" />
+
+                        <div className="pointer-events-none absolute -bottom-28 left-[38%] h-56 w-[420px] rotate-[-18deg] rounded-full border-t border-white/15" />
+
+                        <div className="pointer-events-none absolute bottom-[-90px] left-[45%] h-52 w-[390px] rotate-[-18deg] rounded-full border-t border-white/10" />
+
+                        <div className="pointer-events-none absolute left-[-100px] top-[-110px] h-64 w-64 rounded-full border-[28px] border-white/10" />
+
+                        <div className="relative z-10">
+
+                            <div className="flex flex-col gap-7 lg:flex-row lg:items-center lg:justify-between">
+
+                                {/* HEADER TEXT ONLY */}
+                                <div>
+                                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#f5d98a]">
+                                        Customer Dashboard
+                                    </p>
+
+                                    <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
+                                        Your Accounts
+                                    </h1>
+
+                                    <p className="mt-1 text-sm font-medium text-[#ead9a8] sm:text-base">
+                                        Manage your accounts, transfers and recent activity.
+                                    </p>
+                                </div>
+
+                                {/* ACCOUNT STATUS */}
+                                <div className="flex items-center gap-3 self-start rounded-2xl border border-white/30 bg-white/10 px-5 py-3 shadow-sm backdrop-blur-sm lg:self-center">
+
+                                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-sm">
+                                        <span className="h-3 w-3 rounded-full bg-[#18a85b] shadow-[0_0_0_4px_rgba(24,168,91,0.12)]" />
+                                    </span>
 
                                     <div>
-                                        <p className="mb-1 text-sm font-medium text-[#4b4664]">Good morning,</p>
-                                        <h1 className="text-2xl font-bold tracking-tight text-[#35106e] sm:text-3xl">{customerName}</h1>
-                                        <p className="mt-1 text-sm text-[#514c67] sm:text-base">Welcome back to Comericafin</p>
+                                        <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#ead9a8]">
+                                            Account Status
+                                        </p>
+
+                                        <p className="mt-0.5 text-sm font-extrabold text-white">
+                                            Active
+                                        </p>
                                     </div>
+
+                                </div>
+
+                            </div>
+
+                            <div className="mt-7 flex items-center gap-3">
+
+                                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/40 to-white/10" />
+
+                                <div className="h-2 w-2 rotate-45 border border-white/60 bg-[#b28a32]" />
+
+                                <div className="h-px w-20 bg-white/30" />
+
+                                <div className="h-2 w-2 rotate-45 border border-white/60 bg-[#b28a32]" />
+
+                                <div className="h-px flex-1 bg-gradient-to-r from-white/10 via-white/40 to-transparent" />
+
+                            </div>
+
+                            {/* QUICK ACTIONS */}
+                            <div className="mt-7">
+
+                                <div className="mb-4 flex items-center gap-3">
+
+                                    <h2 className="text-xl font-extrabold text-white sm:text-2xl">
+                                        Quick Actions
+                                    </h2>
+
+                                    <div className="h-px flex-1 bg-white/25" />
+
+                                </div>
+
+                                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+
+                                    <Link
+                                        href={route('customer.transfer')}
+                                        className="group flex min-h-[105px] items-center rounded-2xl border border-white/70 bg-white/95 p-5 shadow-md transition duration-200 hover:-translate-y-1 hover:bg-white hover:shadow-xl"
+                                    >
+                                        <span className="mr-5 flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#5d17a3] to-[#35106e] text-white shadow-md">
+                                            <Icon type="transfer" size={24} />
+                                        </span>
+
+                                        <span className="flex-1">
+                                            <span className="block text-base font-bold text-[#211832]">
+                                                Transfer Money
+                                            </span>
+
+                                            <span className="mt-1 block text-sm text-[#686175]">
+                                                Send money securely to another account
+                                            </span>
+                                        </span>
+
+                                        <Icon
+                                            type="chevron"
+                                            size={20}
+                                            className="text-[#6b6376] transition-transform group-hover:translate-x-1"
+                                        />
+                                    </Link>
+
+                                    <Link
+                                        href="/customer/statements"
+                                        className="group flex min-h-[105px] items-center rounded-2xl border border-white/70 bg-white/95 p-5 shadow-md transition duration-200 hover:-translate-y-1 hover:bg-white hover:shadow-xl"
+                                    >
+                                        <span className="mr-5 flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#5d17a3] to-[#35106e] text-white shadow-md">
+                                            <Icon type="document" size={24} />
+                                        </span>
+
+                                        <span className="flex-1">
+                                            <span className="block text-base font-bold text-[#211832]">
+                                                Statements
+                                            </span>
+
+                                            <span className="mt-1 block text-sm text-[#686175]">
+                                                View and download your statements
+                                            </span>
+                                        </span>
+
+                                        <Icon
+                                            type="chevron"
+                                            size={20}
+                                            className="text-[#6b6376] transition-transform group-hover:translate-x-1"
+                                        />
+                                    </Link>
+
+                                    <Link
+                                        href="/"
+                                        className="group flex min-h-[105px] items-center rounded-2xl border border-white/70 bg-white/95 p-5 text-left shadow-md transition duration-200 hover:-translate-y-1 hover:bg-white hover:shadow-xl"
+                                    >
+                                        <span className="mr-5 flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#5d17a3] to-[#35106e] text-white shadow-md">
+                                            <Icon type="more" size={25} />
+                                        </span>
+
+                                        <span className="flex-1">
+                                            <span className="block text-base font-bold text-[#211832]">
+                                                More
+                                            </span>
+
+                                            <span className="mt-1 block text-sm text-[#686175]">
+                                                More services and options
+                                            </span>
+                                        </span>
+
+                                        <Icon
+                                            type="chevron"
+                                            size={20}
+                                            className="text-[#6b6376] transition-transform group-hover:translate-x-1"
+                                        />
+                                    </Link>
+
                                 </div>
                             </div>
 
-                            <div className="hidden border-l border-[#d9d1e3] pl-7 md:block">
-                                <p className="text-xs font-medium text-[#706a82]">Account status</p>
-                                <div className="mt-1 flex items-center gap-2">
-                                    <span className="h-2 w-2 rounded-full bg-[#18a85b]" />
-                                    <p className="text-sm font-semibold text-[#21183a]">Active</p>
-                                </div>
-                            </div>
                         </div>
                     </section>
 
-                    {/* Quick Actions */}
-                    <section className="mb-8">
-                        <h2 className="mb-4 text-2xl font-bold text-[#3f147a]">
-                            Quick Actions
-                        </h2>
-
-                        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-
-                            <Link
-                                href="/customer/transfer"
-                                className="group flex min-h-[110px] items-center rounded-2xl border border-[#e6e2eb] bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
-                            >
-                                <span className="mr-5 flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#51169a] text-white">
-                                    <Icon type="transfer" size={24} />
-                                </span>
-
-                                <span className="flex-1">
-                                    <span className="block text-base font-bold text-[#17152b]">
-                                        Transfer Money
-                                    </span>
-
-                                    <span className="mt-1 block text-sm text-[#625d73]">
-                                        Send money securely to another account
-                                    </span>
-                                </span>
-
-                                <Icon
-                                    type="chevron"
-                                    size={20}
-                                    className="text-[#655d73]"
-                                />
-                            </Link>
-
-                            <Link
-                                href="/customer/statements"
-                                className="group flex min-h-[110px] items-center rounded-2xl border border-[#e6e2eb] bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
-                            >
-                                <span className="mr-5 flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#51169a] text-white">
-                                    <Icon type="document" size={24} />
-                                </span>
-
-                                <span className="flex-1">
-                                    <span className="block text-base font-bold text-[#17152b]">
-                                        Statements
-                                    </span>
-
-                                    <span className="mt-1 block text-sm text-[#625d73]">
-                                        View and download your statements
-                                    </span>
-                                </span>
-
-                                <Icon
-                                    type="chevron"
-                                    size={20}
-                                    className="text-[#655d73]"
-                                />
-                            </Link>
-
-                            <Link
-                                href="/"
-                                className="group flex min-h-[110px] items-center rounded-2xl border border-[#e6e2eb] bg-white p-5 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
-                            >
-                                <span className="mr-5 flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#51169a] text-white">
-                                    <Icon type="more" size={25} />
-                                </span>
-
-                                <span className="flex-1">
-                                    <span className="block text-base font-bold text-[#17152b]">
-                                        More
-                                    </span>
-
-                                    <span className="mt-1 block text-sm text-[#625d73]">
-                                        More services and options
-                                    </span>
-                                </span>
-
-                                <Icon
-                                    type="chevron"
-                                    size={20}
-                                    className="text-[#655d73]"
-                                />
-                            </Link>
-                        </div>
-                    </section>
-
-                    {/* Main Layout */}
+                    {/* MAIN CONTENT */}
                     <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
 
-                        {/* Left */}
                         <div>
 
-                            {/* Accounts */}
+                            {/* ACCOUNTS */}
                             <section className="mb-6">
-                                <h2 className="mb-4 text-2xl font-bold text-[#3f147a]">
-                                    My Accounts
-                                </h2>
+
+                                <div className="mb-4 flex items-center justify-between">
+
+                                    <h2 className="text-2xl font-bold text-[#3f147a]">
+                                        My Accounts
+                                    </h2>
+
+                                    <div className="ml-6 hidden h-px flex-1 bg-gradient-to-r from-[#d9c6e8] to-transparent sm:block" />
+
+                                </div>
 
                                 <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
 
-                                    {/* Checking */}
-                                    <div className="overflow-hidden rounded-2xl border border-[#e5e1ea] bg-white shadow-sm">
+                                    {/* CHECKING */}
+                                    <div className="overflow-hidden rounded-2xl border border-[#d8d8d8] bg-white shadow-sm transition hover:shadow-md">
+
                                         <div className="p-6">
 
                                             <div className="flex items-start justify-between gap-3">
+
                                                 <div className="flex items-center">
-                                                    <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[#51169a] text-white">
+
+                                                    <span className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-[#5d17a3] to-[#35106e] text-white shadow-md">
                                                         <Icon type="checking" size={22} />
                                                     </span>
 
                                                     <div className="ml-4">
+
                                                         <h3 className="text-base font-bold text-[#19162c]">
                                                             Checking Account
                                                         </h3>
@@ -387,15 +390,19 @@ export default function Dashboard({ user, transactions = [] }) {
                                                         <p className="mt-1 text-sm text-[#625d73]">
                                                             {accountNumber}
                                                         </p>
+
                                                     </div>
+
                                                 </div>
 
                                                 <span className="rounded-full bg-[#e9f9f0] px-3 py-1 text-xs font-semibold text-[#16834b]">
                                                     Active
                                                 </span>
+
                                             </div>
 
                                             <div className="mt-8">
+
                                                 <p className="text-xs font-medium text-[#6b6579]">
                                                     Available Balance
                                                 </p>
@@ -403,31 +410,43 @@ export default function Dashboard({ user, transactions = [] }) {
                                                 <p className="mt-1 text-3xl font-bold text-[#40127e]">
                                                     {checkingBalance}
                                                 </p>
+
                                             </div>
+
                                         </div>
 
-                                        <div className="border-t-2 border-[#5515a0] px-6 py-4">
-                                            <button
-                                                type="button"
-                                                className="ml-auto flex items-center gap-2 text-sm font-semibold text-[#4d1490]"
+                                        <div className="flex items-center justify-between border-t-2 border-[#5515a0] bg-gradient-to-r from-[#fbf8fe] to-white px-6 py-4">
+
+                                            <span className="text-xs text-[#777080]">
+                                                Checking funds
+                                            </span>
+
+                                            <Link
+                                                href="/customer/transfer?source=checking"
+                                                className="flex items-center gap-2 rounded-lg bg-[#4d1490] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#3f1077]"
                                             >
-                                                View Details
-                                                <Icon type="arrow" size={17} />
-                                            </button>
+                                                Transfer
+                                                <Icon type="arrow" size={16} />
+                                            </Link>
+
                                         </div>
                                     </div>
 
-                                    {/* Savings */}
-                                    <div className="overflow-hidden rounded-2xl border border-[#e5e1ea] bg-white shadow-sm">
+                                    {/* SAVINGS */}
+                                    <div className="overflow-hidden rounded-2xl border border-[#d8d8d8] bg-white shadow-sm transition hover:shadow-md">
+
                                         <div className="p-6">
 
                                             <div className="flex items-start justify-between gap-3">
+
                                                 <div className="flex items-center">
-                                                    <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[#f5b52c] text-white">
+
+                                                    <span className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-[#b28a32] to-[#765815] text-white shadow-md">
                                                         <Icon type="savings" size={22} />
                                                     </span>
 
                                                     <div className="ml-4">
+
                                                         <h3 className="text-base font-bold text-[#19162c]">
                                                             Savings Account
                                                         </h3>
@@ -435,15 +454,19 @@ export default function Dashboard({ user, transactions = [] }) {
                                                         <p className="mt-1 text-sm text-[#625d73]">
                                                             Savings
                                                         </p>
+
                                                     </div>
+
                                                 </div>
 
                                                 <span className="rounded-full bg-[#e9f9f0] px-3 py-1 text-xs font-semibold text-[#16834b]">
                                                     Active
                                                 </span>
+
                                             </div>
 
                                             <div className="mt-8">
+
                                                 <p className="text-xs font-medium text-[#6b6579]">
                                                     Available Balance
                                                 </p>
@@ -451,85 +474,127 @@ export default function Dashboard({ user, transactions = [] }) {
                                                 <p className="mt-1 text-3xl font-bold text-[#40127e]">
                                                     {savingsBalance}
                                                 </p>
+
                                             </div>
+
                                         </div>
 
-                                        <div className="border-t-2 border-[#f0ae18] px-6 py-4">
-                                            <button
-                                                type="button"
-                                                className="ml-auto flex items-center gap-2 text-sm font-semibold text-[#4d1490]"
+                                        <div className="flex items-center justify-between border-t-2 border-[#9a751f] bg-gradient-to-r from-[#faf7ef] to-white px-6 py-4">
+
+                                            <span className="text-xs text-[#777080]">
+                                                Savings funds
+                                            </span>
+
+                                            <Link
+                                                href="/customer/transfer?source=savings"
+                                                className="flex items-center gap-2 rounded-lg bg-[#8a691d] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#725617]"
                                             >
-                                                View Details
-                                                <Icon type="arrow" size={17} />
-                                            </button>
+                                                Transfer
+                                                <Icon type="arrow" size={16} />
+                                            </Link>
+
                                         </div>
                                     </div>
+
                                 </div>
                             </section>
 
-                            {/* Card + Activity */}
+                            {/* CARD + ACTIVITY */}
                             <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
 
-                                {/* Card */}
-                                <section className="rounded-2xl border border-[#e5e1ea] bg-white p-6 shadow-sm">
+                                {/* CARD */}
+                                <section className="rounded-2xl border border-[#d8d8d8] bg-white p-6 shadow-sm">
 
                                     <div className="flex flex-col gap-6">
 
-                                        {/* Comericafin Card */}
                                         <div className="relative h-[200px] w-full overflow-hidden rounded-xl bg-gradient-to-br from-[#37106d] via-[#511494] to-[#261044] p-5 text-white shadow-lg">
+
                                             <div className="absolute -right-16 -top-16 h-40 w-40 rounded-full border-[20px] border-white/5" />
 
+                                            <div className="absolute -bottom-24 -left-16 h-40 w-72 rotate-[-20deg] border-t border-white/10" />
+
                                             <div className="relative flex items-start justify-between">
+
                                                 <div className="flex items-center gap-2">
+
                                                     <div className="flex h-9 w-9 items-center justify-center rounded-full border-2 text-white">
-                                                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-                                                            <path d="M12 3L20 7V12C20 17 16.8 20 12 21C7.2 20 4 17 4 12V7L12 3Z" />
-                                                            <path d="M8 12L10.5 14.5L16 9" />
-                                                        </svg>
+                                                        <Icon type="shield" size={22} />
                                                     </div>
 
                                                     <div>
-                                                        <p className="text-sm font-bold tracking-[0.14em] text-white">COMERICAFIN</p>
-                                                        <p className="text-[7px] tracking-[0.2em] text-[#f5c842]">BANK</p>
+                                                        <p className="text-sm font-bold tracking-[0.14em] text-white">
+                                                            COMERICAFIN
+                                                        </p>
+
+                                                        <p className="text-[7px] tracking-[0.2em] text-[#f5c842]">
+                                                            BANK
+                                                        </p>
                                                     </div>
+
                                                 </div>
 
-                                                <span className="text-xs font-medium uppercase tracking-wider text-white/60">Debit</span>
+                                                <span className="text-xs font-medium uppercase tracking-wider text-white/60">
+                                                    Debit
+                                                </span>
+
                                             </div>
 
-                                            {/* Chip */}
                                             <div className="absolute left-5 top-[78px]">
+
                                                 <div className="relative h-[31px] w-[43px] overflow-hidden rounded-md border border-[#c99b29] bg-gradient-to-br from-[#ffe48a] via-[#e5b83e] to-[#a9780f]">
+
                                                     <div className="absolute left-1/2 top-0 h-full w-px bg-[#9b741d]/70" />
                                                     <div className="absolute left-0 top-1/2 h-px w-full bg-[#9b741d]/70" />
                                                     <div className="absolute left-2 top-2 h-[10px] w-[15px] rounded-sm border border-[#9b741d]/70" />
+
                                                 </div>
+
                                             </div>
 
-                                            {/* Card Number */}
                                             <div className="absolute left-5 top-[120px]">
-                                                <p className="text-[8px] uppercase tracking-[0.18em] text-white/45">Card Number</p>
-                                                <p className="mt-1 text-[14px] font-medium tracking-[0.22em] text-white">•••• •••• •••• 0000</p>
+
+                                                <p className="text-[8px] uppercase tracking-[0.18em] text-white/45">
+                                                    Card Number
+                                                </p>
+
+                                                <p className="mt-1 text-[14px] font-medium tracking-[0.22em] text-white">
+                                                    •••• •••• •••• 0000
+                                                </p>
+
                                             </div>
 
-                                            {/* Cardholder */}
                                             <div className="absolute bottom-5 left-5">
-                                                <p className="text-[7px] uppercase tracking-[0.16em] text-white/45">Cardholder</p>
-                                                <p className="mt-1 max-w-[210px] truncate text-[11px] font-semibold uppercase tracking-[0.08em] text-white">{customerName}</p>
+
+                                                <p className="text-[7px] uppercase tracking-[0.16em] text-white/45">
+                                                    Cardholder
+                                                </p>
+
+                                                <p className="mt-1 max-w-[210px] truncate text-[11px] font-semibold uppercase tracking-[0.08em] text-white">
+                                                    {customerName}
+                                                </p>
+
                                             </div>
 
-                                            {/* Account */}
                                             <div className="absolute bottom-5 right-5 text-right">
-                                                <p className="text-[7px] uppercase tracking-[0.16em] text-white/45">Account</p>
-                                                <p className="mt-1 text-[9px] font-semibold tracking-[0.12em] text-white/85">{maskAccountNumber(user?.account_number)}</p>
+
+                                                <p className="text-[7px] uppercase tracking-[0.16em] text-white/45">
+                                                    Account
+                                                </p>
+
+                                                <p className="mt-1 text-[9px] font-semibold tracking-[0.12em] text-white/85">
+                                                    {maskAccountNumber(user?.account_number)}
+                                                </p>
+
                                             </div>
 
-                                            {/* Gold accent */}
-                                            <div className="absolute bottom-0 left-0 h-[3px] w-full bg-gradient-to-r from-[#9c6b0b] via-[#f5c842] to-[#9c6b0b]" />
+                                            <div className="absolute bottom-0 left-0 h-[3px] w-full bg-gradient-to-r from-[#765815] via-[#c6a14a] to-[#765815]" />
+
                                         </div>
 
                                         <div>
+
                                             <div className="flex items-center gap-2">
+
                                                 <Icon
                                                     type="card"
                                                     size={21}
@@ -539,164 +604,182 @@ export default function Dashboard({ user, transactions = [] }) {
                                                 <h3 className="font-bold text-[#35106e]">
                                                     Comericafin Card
                                                 </h3>
+
                                             </div>
 
                                             <p className="mt-3 text-sm leading-6 text-[#625d73]">
-                                                Request a Comericafin card for
-                                                your simulation account.
+                                                Request a Comericafin card for your account.
                                             </p>
 
                                             <button
                                                 type="button"
                                                 onClick={() => setShowCardRequest(true)}
-                                                className="mt-5 w-full rounded-lg border border-[#e8a917] bg-white px-4 py-3 text-sm font-semibold text-[#b97900] transition hover:bg-[#fff9ea]"
+                                                className="mt-5 w-full rounded-lg border border-[#a47c22] bg-white px-4 py-3 text-sm font-semibold text-[#806019] transition hover:bg-[#faf7ef]"
                                             >
                                                 Request Card Delivery
                                             </button>
+
                                         </div>
+
                                     </div>
                                 </section>
-{/* Recent Activity */}
-<section className="rounded-2xl border border-[#e5e1ea] bg-white p-6 shadow-sm">
 
-    <div className="flex items-center justify-between">
-        <h3 className="font-bold text-[#42117f]">
-            Recent Activity
-        </h3>
+                                {/* RECENT ACTIVITY */}
+                                <section className="rounded-2xl border border-[#d8d8d8] bg-white p-6 shadow-sm">
 
-        <Link
-            href="/customer/statements"
-            className="text-xs font-semibold text-[#4d1490] hover:underline"
-        >
-            View all
-        </Link>
-    </div>
+                                    <div className="flex items-center justify-between">
 
-    <div className="mt-4 border-t border-[#eeeaf1]" />
+                                        <h3 className="font-bold text-[#42117f]">
+                                            Recent Activity
+                                        </h3>
 
-    {transactions && transactions.length > 0 ? (
-        <div className="mt-4 space-y-3">
+                                        <Link
+                                            href={route('customer.transactions')}
+                                            className="text-xs font-semibold text-[#4d1490] hover:underline"
+                                        >
+                                            View all
+                                        </Link>
 
-            {transactions.map((transaction) => (
-                <div
-                    key={transaction.id}
-                    className="flex items-center justify-between rounded-xl border border-[#eeeaf1] bg-[#fcfbfd] p-4"
-                >
+                                    </div>
 
-                    {/* Left side */}
-                    <div className="flex min-w-0 items-center gap-3">
+                                    <div className="mt-4 border-t border-[#eeeaf1]" />
 
-                        <div
-                            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
-                                transaction.type === 'credit'
-                                    ? 'bg-[#e9f9f0] text-[#16834b]'
-                                    : 'bg-[#f4eafa] text-[#51169a]'
-                            }`}
-                        >
-                            <Icon
-                                type="transfer"
-                                size={18}
-                            />
-                        </div>
+                                    {transactions && transactions.length > 0 ? (
+                                        <div className="mt-4 space-y-3">
 
-                        <div className="min-w-0">
+                                            {transactions.map((transaction) => (
+                                                <div
+                                                    key={transaction.id}
+                                                    className="flex items-center justify-between rounded-xl border border-[#eeeaf1] bg-[#fcfbfd] p-4"
+                                                >
 
-                            <p className="truncate text-sm font-semibold text-[#211c32]">
-                                {transaction.type === 'credit'
-                                    ? `Received from ${transaction.sender_name || 'Customer'}`
-                                    : `Transfer to ${transaction.recipient_name || 'Customer'}`}
-                            </p>
+                                                    <div className="flex min-w-0 items-center gap-3">
 
-                            <p className="mt-1 truncate text-xs text-[#716b7d]">
-                                {transaction.description ||
-                                    transaction.reference ||
-                                    'Virtual transfer'}
-                            </p>
+                                                        <div
+                                                            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
+                                                                transaction.type === 'credit'
+                                                                    ? 'bg-[#e9f9f0] text-[#16834b]'
+                                                                    : 'bg-[#f4eafa] text-[#51169a]'
+                                                            }`}
+                                                        >
+                                                            <Icon type="transfer" size={18} />
+                                                        </div>
 
-                            <p className="mt-1 text-[11px] text-[#938ca0]">
-                                {transaction.created_at
-                                    ? new Date(
-                                          transaction.created_at
-                                      ).toLocaleDateString('en-US', {
-                                          month: 'short',
-                                          day: 'numeric',
-                                          year: 'numeric',
-                                      })
-                                    : ''}
-                            </p>
+                                                        <div className="min-w-0">
 
-                        </div>
-                    </div>
+                                                            <p className="truncate text-sm font-semibold text-[#211c32]">
+                                                                {transaction.type === 'credit'
+                                                                    ? `Received from ${
+                                                                          transaction.sender_name ||
+                                                                          'Customer'
+                                                                      }`
+                                                                    : `Transfer to ${
+                                                                          transaction.recipient_name ||
+                                                                          'Customer'
+                                                                      }`}
+                                                            </p>
 
-                    {/* Right side */}
-                    <div className="ml-4 shrink-0 text-right">
+                                                            <p className="mt-1 truncate text-xs text-[#716b7d]">
+                                                                {transaction.description ||
+                                                                    transaction.reference ||
+                                                                    'Virtual transfer'}
+                                                            </p>
 
-                        <p
-                            className={`text-sm font-bold ${
-                                transaction.type === 'credit'
-                                    ? 'text-[#16834b]'
-                                    : 'text-[#c43d4b]'
-                            }`}
-                        >
-                            {transaction.type === 'credit' ? '+' : '-'}
-                            {formatCurrency(transaction.amount)}
-                        </p>
+                                                            <p className="mt-1 text-[11px] text-[#938ca0]">
+                                                                {transaction.created_at
+                                                                    ? new Date(
+                                                                          transaction.created_at
+                                                                      ).toLocaleDateString('en-US', {
+                                                                          month: 'short',
+                                                                          day: 'numeric',
+                                                                          year: 'numeric',
+                                                                      })
+                                                                    : ''}
+                                                            </p>
 
-                        <span
-                            className={`mt-1 inline-block rounded-full px-2 py-1 text-[10px] font-semibold ${
-                                transaction.status === 'completed'
-                                    ? 'bg-[#e9f9f0] text-[#16834b]'
-                                    : transaction.status === 'pending'
-                                    ? 'bg-[#fff6df] text-[#a66a00]'
-                                    : 'bg-[#fdecec] text-[#c43d4b]'
-                            }`}
-                        >
-                            {transaction.status
-                                ? transaction.status.charAt(0).toUpperCase() +
-                                  transaction.status.slice(1)
-                                : 'Completed'}
-                        </span>
+                                                        </div>
 
-                    </div>
+                                                    </div>
 
-                </div>
-            ))}
-        </div>
-    ) : (
-        <div className="flex min-h-[250px] flex-col items-center justify-center text-center">
+                                                    <div className="ml-4 shrink-0 text-right">
 
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#f2ebfa] text-[#51169a]">
-                <Icon type="document" size={23} />
-            </div>
+                                                        <p
+                                                            className={`text-sm font-bold ${
+                                                                transaction.type === 'credit'
+                                                                    ? 'text-[#16834b]'
+                                                                    : 'text-[#c43d4b]'
+                                                            }`}
+                                                        >
+                                                            {transaction.type === 'credit'
+                                                                ? '+'
+                                                                : '-'}
+                                                            {formatCurrency(transaction.amount)}
+                                                        </p>
 
-            <p className="mt-3 text-sm font-semibold text-[#29243a]">
-                No recent activity
-            </p>
+                                                        <span
+                                                            className={`mt-1 inline-block rounded-full px-2 py-1 text-[10px] font-semibold ${
+                                                                transaction.status === 'completed'
+                                                                    ? 'bg-[#e9f9f0] text-[#16834b]'
+                                                                    : transaction.status === 'pending'
+                                                                    ? 'bg-[#fff6df] text-[#a66a00]'
+                                                                    : 'bg-[#fdecec] text-[#c43d4b]'
+                                                            }`}
+                                                        >
+                                                            {transaction.status
+                                                                ? transaction.status
+                                                                      .charAt(0)
+                                                                      .toUpperCase() +
+                                                                  transaction.status.slice(1)
+                                                                : 'Completed'}
+                                                        </span>
 
-            <p className="mt-1 max-w-[250px] text-xs leading-5 text-[#716b7d]">
-                Your recent transactions will appear here.
-            </p>
+                                                    </div>
 
-        </div>
-    )}
+                                                </div>
+                                            ))}
 
-</section>
+                                        </div>
+                                    ) : (
+                                        <div className="flex min-h-[250px] flex-col items-center justify-center text-center">
+
+                                            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#f2ebfa] text-[#51169a]">
+                                                <Icon type="document" size={23} />
+                                            </div>
+
+                                            <p className="mt-3 text-sm font-semibold text-[#29243a]">
+                                                No recent activity
+                                            </p>
+
+                                            <p className="mt-1 max-w-[250px] text-xs leading-5 text-[#716b7d]">
+                                                Your recent transactions will appear here.
+                                            </p>
+
+                                        </div>
+                                    )}
+
+                                </section>
+
                             </div>
                         </div>
 
-                        {/* Account Summary */}
-                        <aside className="h-fit rounded-2xl border border-[#e5e1ea] bg-white p-6 shadow-sm xl:sticky xl:top-6">
+                        {/* ACCOUNT SUMMARY */}
+                        <aside className="h-fit rounded-2xl border border-[#d8d8d8] bg-white p-6 shadow-sm xl:sticky xl:top-6">
 
                             <h2 className="text-xl font-bold text-[#42117f]">
                                 Account Summary
                             </h2>
 
-                            <div className="mt-4 border-t border-[#e7e3eb]" />
+                            <div className="mt-4 h-px bg-gradient-to-r from-[#d9c6e8] to-transparent" />
 
                             <div className="space-y-6 pt-5">
 
                                 <div className="flex gap-4">
-                                    <Icon type="user" size={22} className="text-[#4d4960]" />
+
+                                    <Icon
+                                        type="user"
+                                        size={22}
+                                        className="text-[#4d4960]"
+                                    />
 
                                     <div>
                                         <p className="text-xs text-[#6c6678]">
@@ -707,12 +790,19 @@ export default function Dashboard({ user, transactions = [] }) {
                                             {customerName}
                                         </p>
                                     </div>
+
                                 </div>
 
                                 <div className="flex gap-4">
-                                    <Icon type="account" size={22} className="text-[#4d4960]" />
+
+                                    <Icon
+                                        type="account"
+                                        size={22}
+                                        className="text-[#4d4960]"
+                                    />
 
                                     <div>
+
                                         <p className="text-xs text-[#6c6678]">
                                             Account Number
                                         </p>
@@ -720,13 +810,21 @@ export default function Dashboard({ user, transactions = [] }) {
                                         <p className="mt-1 break-all text-sm font-semibold text-[#211c32]">
                                             {user?.account_number || 'Not available'}
                                         </p>
+
                                     </div>
+
                                 </div>
 
                                 <div className="flex gap-4">
-                                    <Icon type="routing" size={22} className="text-[#4d4960]" />
+
+                                    <Icon
+                                        type="routing"
+                                        size={22}
+                                        className="text-[#4d4960]"
+                                    />
 
                                     <div>
+
                                         <p className="text-xs text-[#6c6678]">
                                             Routing Number
                                         </p>
@@ -734,13 +832,21 @@ export default function Dashboard({ user, transactions = [] }) {
                                         <p className="mt-1 text-sm font-semibold text-[#211c32]">
                                             {routingNumber}
                                         </p>
+
                                     </div>
+
                                 </div>
 
                                 <div className="flex gap-4">
-                                    <Icon type="mail" size={22} className="text-[#4d4960]" />
+
+                                    <Icon
+                                        type="mail"
+                                        size={22}
+                                        className="text-[#4d4960]"
+                                    />
 
                                     <div className="min-w-0">
+
                                         <p className="text-xs text-[#6c6678]">
                                             Email
                                         </p>
@@ -748,14 +854,22 @@ export default function Dashboard({ user, transactions = [] }) {
                                         <p className="mt-1 break-all text-sm font-semibold text-[#211c32]">
                                             {user?.email || 'Not available'}
                                         </p>
+
                                     </div>
+
                                 </div>
 
                                 {user?.phone && (
                                     <div className="flex gap-4">
-                                        <Icon type="user" size={22} className="text-[#4d4960]" />
+
+                                        <Icon
+                                            type="user"
+                                            size={22}
+                                            className="text-[#4d4960]"
+                                        />
 
                                         <div>
+
                                             <p className="text-xs text-[#6c6678]">
                                                 Phone
                                             </p>
@@ -763,43 +877,59 @@ export default function Dashboard({ user, transactions = [] }) {
                                             <p className="mt-1 text-sm font-semibold text-[#211c32]">
                                                 {user.phone}
                                             </p>
+
                                         </div>
+
                                     </div>
                                 )}
+
                             </div>
 
                             <Link
                                 href="/customer/profile"
-                                className="mt-7 block w-full rounded-lg bg-[#51169a] px-4 py-3 text-center text-sm font-semibold text-white shadow-sm transition hover:bg-[#431180]"
+                                className="mt-7 block w-full rounded-lg bg-gradient-to-r from-[#51169a] to-[#35106e] px-4 py-3 text-center text-sm font-semibold text-white shadow-sm transition hover:from-[#431180] hover:to-[#2c095d]"
                             >
                                 View Account Details
                             </Link>
+
                         </aside>
                     </div>
 
-                    {/* Security Notice */}
-                    <div className="mt-6 rounded-2xl border border-[#e5d9f0] bg-[#f7f0fc] p-5">
-                        <div className="flex items-start gap-3">
+                    {/* SECURITY NOTICE */}
+                    <div className="relative mt-6 overflow-hidden rounded-2xl border border-[#d5d5d5] bg-[#e4e4e4] p-5">
 
-                            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#5a1b99] text-white">
+                        <div className="pointer-events-none absolute right-0 top-0 h-full w-1/3 opacity-30">
+
+                            <div className="absolute right-10 top-[-35px] h-28 w-56 rotate-[-18deg] border-t border-[#8e64ae]" />
+
+                            <div className="absolute right-[-30px] top-10 h-28 w-56 rotate-[-18deg] border-t border-[#8e64ae]" />
+
+                        </div>
+
+                        <div className="relative flex items-start gap-3">
+
+                            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#5a1b99] to-[#35106e] text-white">
                                 <Icon type="shield" size={18} />
                             </span>
 
                             <div>
+
                                 <p className="text-sm font-semibold text-[#35106e]">
                                     Your account is secure
                                 </p>
 
                                 <p className="mt-1 text-xs leading-5 text-[#655d72]">
-                                    Keep your Comericafin account information
-                                    private and never share your password.
+                                    Keep your Comericafin account information private and never share your password.
                                 </p>
+
                             </div>
+
                         </div>
                     </div>
+
                 </div>
 
-                {/* Card Request Modal */}
+                {/* CARD REQUEST MODAL */}
                 {showCardRequest && (
                     <div
                         className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm"
@@ -809,10 +939,13 @@ export default function Dashboard({ user, transactions = [] }) {
                             }
                         }}
                     >
+
                         <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
 
                             <div className="flex items-start justify-between">
+
                                 <div>
+
                                     <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#f1e8fb] text-[#51169a]">
                                         <Icon type="card" size={22} />
                                     </div>
@@ -820,6 +953,7 @@ export default function Dashboard({ user, transactions = [] }) {
                                     <h3 className="mt-4 text-xl font-bold text-[#35106e]">
                                         Request Comericafin Card
                                     </h3>
+
                                 </div>
 
                                 <button
@@ -829,20 +963,23 @@ export default function Dashboard({ user, transactions = [] }) {
                                 >
                                     <Icon type="close" size={20} />
                                 </button>
+
                             </div>
 
                             <p className="mt-4 text-sm leading-6 text-[#625d73]">
-                                Your card delivery request has been sent to the
-                                administrator for processing.
+                                Your card delivery request has been sent to the administrator for processing.
                             </p>
 
                             <div className="mt-5 rounded-xl border border-[#e5d9f0] bg-[#f7f0fc] p-4">
+
                                 <div className="flex items-center gap-3">
+
                                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#51169a] text-white">
                                         ✓
                                     </div>
 
                                     <div>
+
                                         <p className="text-sm font-semibold text-[#35106e]">
                                             Request Submitted
                                         </p>
@@ -850,8 +987,11 @@ export default function Dashboard({ user, transactions = [] }) {
                                         <p className="mt-1 text-xs leading-5 text-[#665f73]">
                                             Your request has been successfully submitted.
                                         </p>
+
                                     </div>
+
                                 </div>
+
                             </div>
 
                             <button
@@ -861,9 +1001,11 @@ export default function Dashboard({ user, transactions = [] }) {
                             >
                                 Close
                             </button>
+
                         </div>
                     </div>
                 )}
+
             </div>
         </CustomerLayout>
     );

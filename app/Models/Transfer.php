@@ -11,6 +11,7 @@ class Transfer extends Model
         'sender_id',
         'recipient_id',
         'amount',
+        'source_account',
         'reference',
         'status',
         'description',

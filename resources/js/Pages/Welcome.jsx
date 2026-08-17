@@ -1,4 +1,4 @@
-import { Head, useForm } from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 
 export default function Welcome({ auth }) {
@@ -32,33 +32,52 @@ export default function Welcome({ auth }) {
                 <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
                     <nav className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6 lg:px-8">
 
-                        <div className="flex items-center">
+                        {/* LOGO */}
+                        <Link
+                            href="/"
+                            className="flex h-14 items-center"
+                        >
                             <img
-                                src="/images/comericafin-logo.png"
+                                src="/Images/comericafin-logo.png"
                                 alt="Comericafin"
-                                className="h-16 w-auto object-contain"
+                                className="h-11 w-auto max-w-[210px] object-contain sm:h-12"
                             />
-                        </div>
+                        </Link>
 
                         <div className="hidden items-center gap-8 lg:flex">
 
-                            <a href="#personal" className="text-sm font-semibold text-slate-700 transition hover:text-purple-800">
+                            <a
+                                href="#personal"
+                                className="text-sm font-semibold text-slate-700 transition hover:text-purple-800"
+                            >
                                 Personal Banking
                             </a>
 
-                            <a href="#business" className="text-sm font-semibold text-slate-700 transition hover:text-purple-800">
+                            <a
+                                href="#business"
+                                className="text-sm font-semibold text-slate-700 transition hover:text-purple-800"
+                            >
                                 Business Banking
                             </a>
 
-                            <a href="#services" className="text-sm font-semibold text-slate-700 transition hover:text-purple-800">
+                            <a
+                                href="#services"
+                                className="text-sm font-semibold text-slate-700 transition hover:text-purple-800"
+                            >
                                 Services
                             </a>
 
-                            <a href="#about" className="text-sm font-semibold text-slate-700 transition hover:text-purple-800">
+                            <a
+                                href="#about"
+                                className="text-sm font-semibold text-slate-700 transition hover:text-purple-800"
+                            >
                                 About Us
                             </a>
 
-                            <a href="#contact" className="text-sm font-semibold text-slate-700 transition hover:text-purple-800">
+                            <a
+                                href="#contact"
+                                className="text-sm font-semibold text-slate-700 transition hover:text-purple-800"
+                            >
                                 Contact
                             </a>
 
@@ -109,7 +128,7 @@ export default function Welcome({ auth }) {
 
                             <p className="mt-7 max-w-xl text-lg leading-8 text-slate-600">
                                 Manage your accounts, monitor activity, transfer
-                                virtual funds, and stay connected to your finances
+                                funds, and stay connected to your finances
                                 through a modern Comericafin banking experience.
                             </p>
 
@@ -165,7 +184,7 @@ export default function Welcome({ auth }) {
                             <div className="relative overflow-hidden rounded-[2rem] shadow-2xl ring-1 ring-slate-200">
 
                                 <img
-                                    src="/images/banking-hero.jpg"
+                                    src="/Images/banking-hero.jpg"
                                     alt="Comericafin banking"
                                     className="h-[430px] w-full object-cover"
                                 />
@@ -204,7 +223,7 @@ export default function Welcome({ auth }) {
                             <div className="absolute -bottom-10 -left-8 w-72 overflow-hidden rounded-2xl border-4 border-white bg-white shadow-2xl sm:w-80">
 
                                 <img
-                                    src="/images/banking-dashboard.png"
+                                    src="/Images/banking-dashboard.webp"
                                     alt="Digital banking dashboard"
                                     className="h-48 w-full object-cover"
                                 />
@@ -231,8 +250,10 @@ export default function Welcome({ auth }) {
 
                     <div className="mx-auto grid max-w-7xl divide-y border-x border-slate-200 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
 
-                        <a href="#personal" className="group p-7 transition hover:bg-purple-50">
-
+                        <a
+                            href="#personal"
+                            className="group p-7 transition hover:bg-purple-50"
+                        >
                             <p className="text-xs font-bold uppercase tracking-widest text-purple-700">
                                 Personal
                             </p>
@@ -246,8 +267,10 @@ export default function Welcome({ auth }) {
                             </p>
                         </a>
 
-                        <a href="#business" className="group p-7 transition hover:bg-purple-50">
-
+                        <a
+                            href="#business"
+                            className="group p-7 transition hover:bg-purple-50"
+                        >
                             <p className="text-xs font-bold uppercase tracking-widest text-purple-700">
                                 Business
                             </p>
@@ -261,8 +284,10 @@ export default function Welcome({ auth }) {
                             </p>
                         </a>
 
-                        <a href="#services" className="group p-7 transition hover:bg-purple-50">
-
+                        <a
+                            href="#services"
+                            className="group p-7 transition hover:bg-purple-50"
+                        >
                             <p className="text-xs font-bold uppercase tracking-widest text-purple-700">
                                 Services
                             </p>
@@ -302,7 +327,7 @@ export default function Welcome({ auth }) {
 
                             <p className="mt-6 max-w-xl text-lg leading-8 text-slate-600">
                                 Access your account, review balances, transfer
-                                virtual funds, and keep track of your financial
+                                funds, and keep track of your financial
                                 activity from one convenient place.
                             </p>
 
@@ -335,7 +360,7 @@ export default function Welcome({ auth }) {
                                     </h3>
 
                                     <p className="mt-2 text-sm leading-6 text-slate-500">
-                                        Transfer virtual funds conveniently through
+                                        Transfer funds conveniently through
                                         your account.
                                     </p>
                                 </div>
@@ -352,7 +377,7 @@ export default function Welcome({ auth }) {
                             <div className="relative overflow-hidden rounded-3xl bg-white p-4 shadow-2xl ring-1 ring-slate-200">
 
                                 <img
-                                    src="/images/financial-growth.png"
+                                    src="/Images/financial-growth.png"
                                     alt="Financial growth graphic"
                                     className="h-[430px] w-full rounded-2xl object-cover"
                                 />
@@ -454,7 +479,7 @@ export default function Welcome({ auth }) {
                                 <div className="overflow-hidden rounded-[2rem] bg-white p-4 shadow-2xl ring-1 ring-slate-200">
 
                                     <img
-                                        src="/images/money-transfer.png"
+                                        src="/Images/money-transfer.png"
                                         alt="Money transfer illustration"
                                         className="h-[420px] w-full rounded-2xl object-cover"
                                     />
@@ -467,7 +492,7 @@ export default function Welcome({ auth }) {
                                             </p>
 
                                             <p className="mt-1 font-bold text-slate-900">
-                                                Convenient virtual transfers
+                                                Convenient transfers
                                             </p>
                                         </div>
 
@@ -512,34 +537,109 @@ export default function Welcome({ auth }) {
 
                         <div className="mt-14 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
 
-                            {[
-                                ['Account Management', 'Manage your account information and balances.'],
-                                ['Money Transfers', 'Transfer virtual funds between supported accounts.'],
-                                ['Transaction History', 'Review recent account activity.'],
-                                ['Card Services', 'Manage card requests and account services.'],
-                            ].map(([title, description]) => (
-                                <div
-                                    key={title}
-                                    className="group rounded-2xl border border-slate-200 bg-white p-7 transition hover:-translate-y-1 hover:border-purple-200 hover:shadow-xl"
-                                >
+                            {/* ACCOUNT MANAGEMENT */}
+                            <div className="group rounded-2xl border border-slate-200 bg-white p-7 transition hover:-translate-y-1 hover:border-purple-200 hover:shadow-xl">
 
-                                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-100 text-xl font-bold text-purple-800">
-                                        +
-                                    </div>
-
-                                    <h3 className="mt-6 font-bold text-slate-900">
-                                        {title}
-                                    </h3>
-
-                                    <p className="mt-3 text-sm leading-6 text-slate-500">
-                                        {description}
-                                    </p>
-
-                                    <div className="mt-6 text-sm font-bold text-purple-800">
-                                        Learn more →
-                                    </div>
+                                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-100 text-xl font-bold text-purple-800">
+                                    +
                                 </div>
-                            ))}
+
+                                <h3 className="mt-6 font-bold text-slate-900">
+                                    Account Management
+                                </h3>
+
+                                <p className="mt-3 text-sm leading-6 text-slate-500">
+                                    Manage your account information and balances.
+                                </p>
+
+                                <Link
+                                    href={route('customer.create-account', {
+                                        service: 'Account Management',
+                                    })}
+                                    className="mt-6 inline-block text-sm font-bold text-purple-800 hover:text-purple-950"
+                                >
+                                    Learn more →
+                                </Link>
+                            </div>
+
+
+                            {/* MONEY TRANSFERS */}
+                            <div className="group rounded-2xl border border-slate-200 bg-white p-7 transition hover:-translate-y-1 hover:border-purple-200 hover:shadow-xl">
+
+                                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-100 text-xl font-bold text-purple-800">
+                                    +
+                                </div>
+
+                                <h3 className="mt-6 font-bold text-slate-900">
+                                    Money Transfers
+                                </h3>
+
+                                <p className="mt-3 text-sm leading-6 text-slate-500">
+                                    Transfer funds between supported accounts.
+                                </p>
+
+                                <Link
+                                    href={route('customer.create-account', {
+                                        service: 'Money Transfers',
+                                    })}
+                                    className="mt-6 inline-block text-sm font-bold text-purple-800 hover:text-purple-950"
+                                >
+                                    Learn more →
+                                </Link>
+                            </div>
+
+
+                            {/* TRANSACTION HISTORY */}
+                            <div className="group rounded-2xl border border-slate-200 bg-white p-7 transition hover:-translate-y-1 hover:border-purple-200 hover:shadow-xl">
+
+                                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-100 text-xl font-bold text-purple-800">
+                                    +
+                                </div>
+
+                                <h3 className="mt-6 font-bold text-slate-900">
+                                    Transaction History
+                                </h3>
+
+                                <p className="mt-3 text-sm leading-6 text-slate-500">
+                                    Review recent account activity.
+                                </p>
+
+                                <Link
+                                    href={route('customer.create-account', {
+                                        service: 'Transaction History',
+                                    })}
+                                    className="mt-6 inline-block text-sm font-bold text-purple-800 hover:text-purple-950"
+                                >
+                                    Learn more →
+                                </Link>
+                            </div>
+
+
+                            {/* CARD SERVICES */}
+                            <div className="group rounded-2xl border border-slate-200 bg-white p-7 transition hover:-translate-y-1 hover:border-purple-200 hover:shadow-xl">
+
+                                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-100 text-xl font-bold text-purple-800">
+                                    +
+                                </div>
+
+                                <h3 className="mt-6 font-bold text-slate-900">
+                                    Card Services
+                                </h3>
+
+                                <p className="mt-3 text-sm leading-6 text-slate-500">
+                                    Manage card requests and account services.
+                                </p>
+
+                                <Link
+                                    href={route('customer.create-account', {
+                                        service: 'Card Services',
+                                    })}
+                                    className="mt-6 inline-block text-sm font-bold text-purple-800 hover:text-purple-950"
+                                >
+                                    Learn more →
+                                </Link>
+                            </div>
+
                         </div>
                     </div>
                 </section>
@@ -602,7 +702,7 @@ export default function Welcome({ auth }) {
                             <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-white/10 p-4 shadow-2xl backdrop-blur">
 
                                 <img
-                                    src="/images/security-shield.png"
+                                    src="/Images/security-shield.png"
                                     alt="Security protection illustration"
                                     className="h-[440px] w-full rounded-2xl object-cover"
                                 />
@@ -671,9 +771,9 @@ export default function Welcome({ auth }) {
                             </p>
 
                             <div className="mt-8 rounded-2xl border border-purple-100 bg-purple-50 p-5 text-sm leading-6 text-purple-900">
-                                <strong>Simulation platform:</strong> Comericafin is
-                                designed as a virtual banking environment for account
-                                management and financial activity simulation.
+                                <strong>Comericafin</strong> provides a modern
+                                account management environment for financial
+                                activity and customer services.
                             </div>
 
                         </div>
@@ -730,14 +830,19 @@ export default function Welcome({ auth }) {
 
                             <div className="md:col-span-2">
 
-                                <img
-                                    src="/images/comericafin-logo.png"
-                                    alt="Comericafin"
-                                    className="h-16 w-auto object-contain brightness-0 invert"
-                                />
+                                <Link
+                                    href="/"
+                                    className="inline-flex items-center"
+                                >
+                                    <img
+                                        src="/Images/comericafin-logo.png"
+                                        alt="Comericafin"
+                                        className="h-11 w-auto max-w-[210px] object-contain brightness-0 invert sm:h-12"
+                                    />
+                                </Link>
 
                                 <p className="mt-5 max-w-md text-sm leading-6 text-purple-200">
-                                    A modern digital banking simulation experience
+                                    A modern digital banking experience
                                     focused on convenient account management and
                                     professional financial interfaces.
                                 </p>
@@ -852,7 +957,10 @@ export default function Welcome({ auth }) {
                             {/* FORM */}
                             <div className="flex-1 overflow-y-auto px-8 py-9">
 
-                                <form onSubmit={submitLogin} className="space-y-6">
+                                <form
+                                    onSubmit={submitLogin}
+                                    className="space-y-6"
+                                >
 
                                     <div>
 
@@ -863,7 +971,12 @@ export default function Welcome({ auth }) {
                                         <input
                                             type="email"
                                             value={data.email}
-                                            onChange={(e) => setData('email', e.target.value)}
+                                            onChange={(e) =>
+                                                setData(
+                                                    'email',
+                                                    e.target.value
+                                                )
+                                            }
                                             placeholder="Enter your email"
                                             autoComplete="email"
                                             className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-purple-700 focus:ring-4 focus:ring-purple-100"
@@ -888,7 +1001,12 @@ export default function Welcome({ auth }) {
                                         <input
                                             type="password"
                                             value={data.password}
-                                            onChange={(e) => setData('password', e.target.value)}
+                                            onChange={(e) =>
+                                                setData(
+                                                    'password',
+                                                    e.target.value
+                                                )
+                                            }
                                             placeholder="Enter your password"
                                             autoComplete="current-password"
                                             className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-purple-700 focus:ring-4 focus:ring-purple-100"
@@ -909,7 +1027,10 @@ export default function Welcome({ auth }) {
                                             type="checkbox"
                                             checked={data.remember}
                                             onChange={(e) =>
-                                                setData('remember', e.target.checked)
+                                                setData(
+                                                    'remember',
+                                                    e.target.checked
+                                                )
                                             }
                                             className="h-4 w-4 rounded border-slate-300 text-purple-800 focus:ring-purple-600"
                                         />
@@ -925,7 +1046,9 @@ export default function Welcome({ auth }) {
                                         disabled={processing}
                                         className="w-full rounded-lg bg-purple-800 px-6 py-4 text-sm font-bold text-white shadow-lg transition hover:bg-purple-900 disabled:cursor-not-allowed disabled:opacity-60"
                                     >
-                                        {processing ? 'Signing in...' : 'Sign In'}
+                                        {processing
+                                            ? 'Signing in...'
+                                            : 'Sign In'}
                                     </button>
 
                                 </form>

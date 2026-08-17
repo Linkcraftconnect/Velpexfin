@@ -8,17 +8,20 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->decimal('savings_balance', 15, 2)
-                ->default(0.00)
-                ->after('balance');
-        });
+        if (! Schema::hasColumn('users', 'savings_balance')) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->decimal('savings_balance', 15, 2)
+                    ->default(0.00);
+            });
+        }
     }
 
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('savings_balance');
-        });
+        if (Schema::hasColumn('users', 'savings_balance')) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->dropColumn('savings_balance');
+            });
+        }
     }
 };

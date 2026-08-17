@@ -5,11 +5,16 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\AdministratorController;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\TransferController;
+use App\Http\Controllers\Customer\DashboardController as CustomerDashboardController;
+use App\Http\Controllers\Customer\ProfileController as CustomerProfileController;
+use App\Http\Controllers\Customer\TransactionController;
 use App\Http\Controllers\Customer\TransferController as CustomerTransferController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Http\Controllers\AccountRequestController;
 
 
 /*
@@ -34,30 +39,59 @@ Route::get('/', function () {
 |--------------------------------------------------------------------------
 */
 
-Route::get('/customer/dashboard', function () {
+Route::get('/customer/dashboard', [CustomerDashboardController::class, 'index'])
+    ->name('customer.dashboard');
 
-    $customerId = session('customer_id');
 
-    if (!$customerId) {
-        return redirect()->route('login');
-    }
+/*
+|--------------------------------------------------------------------------
+| Customer Transactions
+|--------------------------------------------------------------------------
+*/
 
-    $customer = \App\Models\User::where('id', $customerId)
-        ->where('role', 'customer')
-        ->where('status', 'active')
-        ->first();
+Route::get('/customer/transactions', [TransactionController::class, 'index'])
+    ->name('customer.transactions');
 
-    if (!$customer) {
-        session()->forget('customer_id');
 
-        return redirect()->route('login');
-    }
+/*
+|--------------------------------------------------------------------------
+| Customer Profile
+|--------------------------------------------------------------------------
+*/
 
-    return Inertia::render('Customers/Dashboard', [
-        'user' => $customer,
+Route::get('/customer/profile', [CustomerProfileController::class, 'index'])
+    ->name('customer.profile');
+
+
+/*
+|--------------------------------------------------------------------------
+| Customer Settings
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/customer/settings', function () {
+    return Inertia::render('Customers/Settings', [
+        'user' => auth()->user(),
     ]);
+})
+    ->middleware('auth')
+    ->name('customer.settings');
 
-})->name('customer.dashboard');
+
+/*
+|--------------------------------------------------------------------------
+| Customer Account Request
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/customer/create-account', function (Request $request) {
+    return Inertia::render('Customers/CreateAccount', [
+        'selectedService' => $request->query('service', ''),
+    ]);
+})->name('customer.create-account');
+
+Route::post('/customer/create-account', [AccountRequestController::class, 'store'])
+    ->name('customer.account-request.store');
 
 
 /*

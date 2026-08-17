@@ -56,16 +56,6 @@ const Icon = ({ type, size = 22, className = '' }) => {
                 </svg>
             );
 
-        case 'money':
-            return (
-                <svg {...common}>
-                    <rect x="3" y="5" width="18" height="14" rx="2" />
-                    <circle cx="12" cy="12" r="3" />
-                    <path d="M7 9h.01" />
-                    <path d="M17 15h.01" />
-                </svg>
-            );
-
         case 'shield':
             return (
                 <svg {...common}>
@@ -96,17 +86,53 @@ const Icon = ({ type, size = 22, className = '' }) => {
                 </svg>
             );
 
+        case 'close':
+            return (
+                <svg {...common}>
+                    <path d="m6 6 12 12" />
+                    <path d="m18 6-12 12" />
+                </svg>
+            );
+
         default:
             return null;
     }
 };
 
-export default function Transfer() {
+export default function Transfer({ accounts = [] }) {
     const [search, setSearch] = useState('');
+
     const [pinRequired, setPinRequired] = useState(false);
+    const [transferPin, setTransferPin] = useState('');
+    const [pinError, setPinError] = useState('');
+
     const [stage, setStage] = useState('form');
     const [completed, setCompleted] = useState(false);
     const [reference, setReference] = useState('');
+
+    const getInitialSourceAccount = () => {
+        if (typeof window === 'undefined') {
+            return 'checking';
+        }
+
+        const source = new URLSearchParams(window.location.search).get(
+            'source'
+        );
+
+        return source === 'savings' ? 'savings' : 'checking';
+    };
+
+    const initialSourceAccount = getInitialSourceAccount();
+
+    const [sourceAccount, setSourceAccount] = useState(
+        initialSourceAccount
+    );
+
+    /*
+    |--------------------------------------------------------------------------
+    | Bank list
+    |--------------------------------------------------------------------------
+    */
 
     const bankList = useMemo(() => {
         return [...new Set(['Comericafin', ...banks])];
@@ -124,6 +150,55 @@ export default function Transfer() {
         );
     }, [search, bankList]);
 
+    /*
+    |--------------------------------------------------------------------------
+    | Accounts
+    |--------------------------------------------------------------------------
+    */
+
+    const checkingAccount = useMemo(() => {
+        if (!Array.isArray(accounts)) {
+            return null;
+        }
+
+        return (
+            accounts.find((account) => account.type === 'checking') ||
+            null
+        );
+    }, [accounts]);
+
+    const savingsAccount = useMemo(() => {
+        if (!Array.isArray(accounts)) {
+            return null;
+        }
+
+        return (
+            accounts.find((account) => account.type === 'savings') ||
+            null
+        );
+    }, [accounts]);
+
+    const checkingBalance = Number(
+        checkingAccount?.balance ?? 0
+    );
+
+    const savingsBalance = Number(
+        savingsAccount?.savings_balance ??
+            savingsAccount?.balance ??
+            0
+    );
+
+    const selectedBalance =
+        sourceAccount === 'savings'
+            ? savingsBalance
+            : checkingBalance;
+
+    /*
+    |--------------------------------------------------------------------------
+    | Form
+    |--------------------------------------------------------------------------
+    */
+
     const {
         data,
         setData,
@@ -131,6 +206,7 @@ export default function Transfer() {
         processing,
         errors,
     } = useForm({
+        source_account: initialSourceAccount,
         recipient_name: '',
         bank_name: '',
         routing_number: '',
@@ -140,22 +216,35 @@ export default function Transfer() {
         description: '',
     });
 
-    const submit = (e) => {
-        e.preventDefault();
+    /*
+    |--------------------------------------------------------------------------
+    | Source account
+    |--------------------------------------------------------------------------
+    */
 
-        if (data.bank_name !== 'Comericafin') {
-            setPinRequired(true);
-            return;
-        }
+    const handleSourceAccountChange = (value) => {
+        const nextAccount =
+            value === 'savings' ? 'savings' : 'checking';
 
+        setSourceAccount(nextAccount);
+        setData('source_account', nextAccount);
+    };
+
+    /*
+    |--------------------------------------------------------------------------
+    | Process transfer
+    |--------------------------------------------------------------------------
+    */
+
+    const processTransfer = () => {
         setPinRequired(false);
+        setPinError('');
+        setStage('processing');
 
         post(route('customer.transfer.store'), {
             preserveScroll: true,
 
             onSuccess: () => {
-                setStage('processing');
-
                 setTimeout(() => {
                     const generatedReference =
                         'CF' + Date.now().toString().slice(-10);
@@ -163,7 +252,7 @@ export default function Transfer() {
                     setReference(generatedReference);
                     setCompleted(true);
                     setStage('completed');
-                }, 5000);
+                }, 1500);
             },
 
             onError: () => {
@@ -173,117 +262,206 @@ export default function Transfer() {
     };
 
     /*
-     * SUCCESS
-     */
+    |--------------------------------------------------------------------------
+    | Submit
+    |--------------------------------------------------------------------------
+    */
+
+    const submit = (e) => {
+        e.preventDefault();
+
+        if (data.bank_name === 'Comericafin') {
+            processTransfer();
+            return;
+        }
+
+        setTransferPin('');
+        setPinError('');
+        setPinRequired(true);
+    };
+
+    /*
+    |--------------------------------------------------------------------------
+    | Confirm PIN
+    |--------------------------------------------------------------------------
+    */
+
+    const confirmPin = () => {
+        if (!/^\d{4}$/.test(transferPin)) {
+            setPinError(
+                'Please enter your 4-digit transfer PIN.'
+            );
+
+            return;
+        }
+
+        processTransfer();
+    };
+
+    /*
+    |--------------------------------------------------------------------------
+    | SUCCESS
+    |--------------------------------------------------------------------------
+    */
+
     if (completed) {
         return (
             <CustomerLayout>
                 <Head title="Transfer Completed" />
 
-                <div className="min-h-screen bg-[#f7f7f8] px-4 py-8 sm:px-6 lg:px-8">
+                <div className="min-h-screen bg-white px-4 py-8 sm:px-6 lg:px-8">
+
                     <div className="mx-auto max-w-3xl">
 
                         <div className="mb-6">
-                            <p className="text-sm font-medium text-[#6b6b72]">
+
+                            <p className="text-sm font-medium text-gray-500">
                                 Transfers
                             </p>
 
-                            <h1 className="mt-1 text-3xl font-bold tracking-tight text-[#35106e]">
+                            <h1 className="mt-1 text-3xl font-bold tracking-tight text-gray-900">
                                 Transfer completed
                             </h1>
+
                         </div>
 
-                        <div className="overflow-hidden rounded-xl border border-[#dedee3] bg-white shadow-[0_4px_20px_rgba(0,0,0,0.06)]">
+                        <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-lg">
 
-                            <div className="border-b border-[#e7e7eb] px-6 py-7 sm:px-8">
+                            <div className="border-b border-gray-200 px-6 py-7 sm:px-8">
+
                                 <div className="flex items-center gap-4">
 
-                                    <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#e8f5ed] text-[#167544]">
+                                    <div className="flex h-14 w-14 items-center justify-center rounded-full bg-green-50 text-green-600">
+
                                         <Icon
                                             type="check"
                                             size={28}
-                                            strokeWidth={2.5}
                                         />
+
                                     </div>
 
                                     <div>
-                                        <h2 className="text-xl font-bold text-[#242329]">
+
+                                        <h2 className="text-xl font-bold text-gray-900">
                                             Transfer successful
                                         </h2>
 
-                                        <p className="mt-1 text-sm text-[#686770]">
+                                        <p className="mt-1 text-sm text-gray-500">
                                             Your transfer has been completed.
                                         </p>
+
                                     </div>
 
                                 </div>
+
                             </div>
 
                             <div className="p-6 sm:p-8">
 
-                                <div className="rounded-lg border border-[#e3e3e7] bg-[#fafafa]">
+                                <div className="rounded-xl border border-gray-200 bg-gray-50">
 
-                                    <div className="grid grid-cols-1 divide-y divide-[#e3e3e7] sm:grid-cols-2 sm:divide-x sm:divide-y-0">
+                                    <div className="grid grid-cols-1 divide-y divide-gray-200 sm:grid-cols-2 sm:divide-x sm:divide-y-0">
 
                                         <div className="p-5">
-                                            <p className="text-xs font-medium uppercase tracking-wide text-[#777780]">
+
+                                            <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                                                From Account
+                                            </p>
+
+                                            <p className="mt-2 text-sm font-semibold capitalize text-gray-900">
+                                                {data.source_account} Account
+                                            </p>
+
+                                        </div>
+
+                                        <div className="p-5">
+
+                                            <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
                                                 Recipient
                                             </p>
 
-                                            <p className="mt-2 text-sm font-semibold text-[#26242b]">
+                                            <p className="mt-2 text-sm font-semibold text-gray-900">
                                                 {data.recipient_name}
                                             </p>
+
+                                        </div>
+
+                                    </div>
+
+                                    <div className="grid grid-cols-1 border-t border-gray-200 sm:grid-cols-2">
+
+                                        <div className="border-b border-gray-200 p-5 sm:border-b-0 sm:border-r">
+
+                                            <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                                                Destination Account
+                                            </p>
+
+                                            <p className="mt-2 text-sm font-semibold capitalize text-gray-900">
+                                                {data.account_type}
+                                            </p>
+
                                         </div>
 
                                         <div className="p-5">
-                                            <p className="text-xs font-medium uppercase tracking-wide text-[#777780]">
+
+                                            <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
                                                 Bank
                                             </p>
 
-                                            <p className="mt-2 text-sm font-semibold text-[#26242b]">
+                                            <p className="mt-2 text-sm font-semibold text-gray-900">
                                                 {data.bank_name}
                                             </p>
+
                                         </div>
 
                                     </div>
 
-                                    <div className="border-t border-[#e3e3e7] p-5">
-                                        <p className="text-xs font-medium uppercase tracking-wide text-[#777780]">
+                                    <div className="border-t border-gray-200 p-5">
+
+                                        <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
                                             Amount
                                         </p>
 
-                                        <p className="mt-2 text-3xl font-bold text-[#35106e]">
+                                        <p className="mt-2 text-3xl font-bold text-[#51169a]">
                                             {formatCurrency(data.amount)}
                                         </p>
+
                                     </div>
 
-                                    <div className="grid grid-cols-1 border-t border-[#e3e3e7] sm:grid-cols-2">
+                                    <div className="grid grid-cols-1 border-t border-gray-200 sm:grid-cols-2">
 
-                                        <div className="border-b border-[#e3e3e7] p-5 sm:border-b-0 sm:border-r">
-                                            <p className="text-xs font-medium uppercase tracking-wide text-[#777780]">
+                                        <div className="border-b border-gray-200 p-5 sm:border-b-0 sm:border-r">
+
+                                            <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
                                                 Reference
                                             </p>
 
-                                            <p className="mt-2 text-sm font-semibold text-[#26242b]">
+                                            <p className="mt-2 text-sm font-semibold text-gray-900">
                                                 {reference}
                                             </p>
+
                                         </div>
 
                                         <div className="p-5">
-                                            <p className="text-xs font-medium uppercase tracking-wide text-[#777780]">
+
+                                            <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
                                                 Status
                                             </p>
 
                                             <div className="mt-2 flex items-center gap-2">
-                                                <span className="h-2 w-2 rounded-full bg-[#16804b]" />
 
-                                                <span className="text-sm font-semibold text-[#16804b]">
+                                                <span className="h-2 w-2 rounded-full bg-green-500" />
+
+                                                <span className="text-sm font-semibold text-green-600">
                                                     Completed
                                                 </span>
+
                                             </div>
+
                                         </div>
 
                                     </div>
+
                                 </div>
 
                                 <button
@@ -299,127 +477,168 @@ export default function Transfer() {
                                 </button>
 
                             </div>
+
                         </div>
+
                     </div>
+
                 </div>
             </CustomerLayout>
         );
     }
 
     /*
-     * PROCESSING
-     */
+    |--------------------------------------------------------------------------
+    | PROCESSING
+    |--------------------------------------------------------------------------
+    */
+
     if (stage === 'processing') {
         return (
             <CustomerLayout>
                 <Head title="Processing Transfer" />
 
-                <div className="min-h-screen bg-[#f7f7f8] px-4 py-10 sm:px-6 lg:px-8">
+                <div className="min-h-screen bg-white px-4 py-10 sm:px-6 lg:px-8">
+
                     <div className="mx-auto max-w-2xl">
 
-                        <div className="overflow-hidden rounded-xl border border-[#dedee3] bg-white shadow-[0_4px_20px_rgba(0,0,0,0.06)]">
+                        <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-lg">
 
                             <div className="px-6 py-14 text-center sm:px-10">
 
-                                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#f1ebf8]">
-                                    <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-[#d9cbea] border-t-[#51169a]" />
+                                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-purple-50">
+
+                                    <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-purple-100 border-t-[#51169a]" />
+
                                 </div>
 
-                                <h1 className="mt-7 text-2xl font-bold text-[#35106e]">
+                                <h1 className="mt-7 text-2xl font-bold text-gray-900">
                                     Processing your transfer
                                 </h1>
 
-                                <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-[#66656c]">
+                                <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-gray-500">
                                     Please wait while your transfer is being
                                     processed.
                                 </p>
 
                                 <div className="mx-auto mt-8 max-w-md">
-                                    <div className="h-1.5 overflow-hidden rounded-full bg-[#e9e9ec]">
+
+                                    <div className="h-1.5 overflow-hidden rounded-full bg-gray-100">
+
                                         <div className="h-full w-full animate-pulse rounded-full bg-[#51169a]" />
+
                                     </div>
+
                                 </div>
 
-                                <p className="mt-4 text-xs font-medium text-[#777780]">
-                                    Processing transfer...
+                                <p className="mt-4 text-xs font-medium text-gray-500">
+
+                                    Processing transfer from{' '}
+
+                                    <span className="font-semibold capitalize text-[#51169a]">
+                                        {data.source_account}
+                                    </span>
+
+                                    ...
+
                                 </p>
 
                             </div>
+
                         </div>
+
                     </div>
+
                 </div>
             </CustomerLayout>
         );
     }
 
     /*
-     * TRANSFER FORM
-     */
+    |--------------------------------------------------------------------------
+    | TRANSFER FORM
+    |--------------------------------------------------------------------------
+    */
+
     return (
         <CustomerLayout>
             <Head title="Transfer Money" />
 
-            <div className="min-h-screen bg-[#f7f7f8] px-4 py-7 sm:px-6 lg:px-8">
+            <div className="min-h-screen bg-white px-4 py-7 sm:px-6 lg:px-8">
 
                 <div className="mx-auto max-w-6xl">
 
-                    {/* Page Header */}
+                    {/* HEADER */}
+
                     <div className="mb-7">
 
-                        <div className="flex items-center gap-2 text-sm text-[#777780]">
-                            <span>Move Money</span>
+                        <div className="flex items-center gap-2 text-sm text-gray-500">
+
+                            <span>
+                                Move Money
+                            </span>
 
                             <Icon
                                 type="chevron"
                                 size={15}
-                                className="text-[#aaaab0]"
+                                className="text-gray-400"
                             />
 
                             <span className="font-medium text-[#51169a]">
                                 Transfer Money
                             </span>
+
                         </div>
 
                         <div className="mt-4">
-                            <h1 className="text-3xl font-bold tracking-tight text-[#29262f] sm:text-4xl">
+
+                            <h1 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
                                 Transfer Money
                             </h1>
 
-                            <p className="mt-2 max-w-2xl text-sm leading-6 text-[#696870]">
-                                Send money securely to another Comericafin
+                            <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-500">
+                                Send funds securely to another Comericafin
                                 customer.
                             </p>
+
                         </div>
+
                     </div>
 
                     <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
 
-                        {/* Main Form */}
-                        <div className="overflow-hidden rounded-xl border border-[#dedee3] bg-white shadow-[0_4px_20px_rgba(0,0,0,0.05)]">
+                        {/* MAIN FORM */}
 
-                            {/* Section Header */}
-                            <div className="border-b border-[#e6e6ea] px-6 py-5 sm:px-8">
+                        <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+
+                            <div className="border-b border-gray-200 px-6 py-5 sm:px-8">
 
                                 <div className="flex items-center gap-3">
 
-                                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#f1eafa] text-[#51169a]">
+                                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-50 text-[#51169a]">
+
                                         <Icon
                                             type="arrow"
                                             size={20}
                                         />
+
                                     </div>
 
                                     <div>
-                                        <h2 className="text-lg font-bold text-[#29262f]">
+
+                                        <h2 className="text-lg font-bold text-gray-900">
                                             Transfer details
                                         </h2>
 
-                                        <p className="mt-0.5 text-xs text-[#777780]">
-                                            Enter the information below.
+                                        <p className="mt-0.5 text-xs text-gray-500">
+                                            Choose the account and enter the
+                                            recipient information.
                                         </p>
+
                                     </div>
 
                                 </div>
+
                             </div>
 
                             <form
@@ -427,36 +646,9 @@ export default function Transfer() {
                                 className="p-6 sm:p-8"
                             >
 
-                                {/* PIN Alert */}
-                                {pinRequired && (
-                                    <div className="mb-7 rounded-lg border border-[#ead9a7] bg-[#fffaf0] p-4">
+                                {/* SOURCE ACCOUNT */}
 
-                                        <div className="flex gap-3">
-
-                                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#f7e9bb] text-[#916b00]">
-                                                <Icon
-                                                    type="lock"
-                                                    size={17}
-                                                />
-                                            </div>
-
-                                            <div>
-                                                <p className="text-sm font-bold text-[#6f5400]">
-                                                    Transfer PIN required
-                                                </p>
-
-                                                <p className="mt-1 text-xs leading-5 text-[#806b2b]">
-                                                    A Transfer PIN is required
-                                                    for this destination.
-                                                </p>
-                                            </div>
-
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Recipient Section */}
-                                <div>
+                                <div className="mb-8">
 
                                     <div className="mb-5 flex items-center gap-3">
 
@@ -465,31 +657,180 @@ export default function Transfer() {
                                         </span>
 
                                         <div>
-                                            <h3 className="text-base font-bold text-[#29262f]">
+
+                                            <h3 className="text-base font-bold text-gray-900">
+                                                From Account
+                                            </h3>
+
+                                            <p className="text-xs text-gray-500">
+                                                Choose which account to send
+                                                money from.
+                                            </p>
+
+                                        </div>
+
+                                    </div>
+
+                                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+
+                                        {/* CHECKING */}
+
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                handleSourceAccountChange(
+                                                    'checking'
+                                                )
+                                            }
+                                            className={`rounded-xl border p-5 text-left transition ${
+                                                sourceAccount === 'checking'
+                                                    ? 'border-[#51169a] bg-purple-50 ring-2 ring-[#51169a]/10'
+                                                    : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
+                                            }`}
+                                        >
+
+                                            <div className="flex items-center justify-between gap-3">
+
+                                                <div>
+
+                                                    <p className="text-sm font-bold text-gray-900">
+                                                        Checking Account
+                                                    </p>
+
+                                                    <p className="mt-1 text-xs text-gray-500">
+                                                        Available balance
+                                                    </p>
+
+                                                </div>
+
+                                                <span
+                                                    className={`flex h-8 w-8 items-center justify-center rounded-full ${
+                                                        sourceAccount === 'checking'
+                                                            ? 'bg-[#51169a] text-white'
+                                                            : 'bg-gray-100 text-gray-400'
+                                                    }`}
+                                                >
+                                                    <Icon
+                                                        type="check"
+                                                        size={16}
+                                                    />
+                                                </span>
+
+                                            </div>
+
+                                            <p className="mt-4 text-2xl font-bold text-[#51169a]">
+                                                {formatCurrency(
+                                                    checkingBalance
+                                                )}
+                                            </p>
+
+                                        </button>
+
+                                        {/* SAVINGS */}
+
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                handleSourceAccountChange(
+                                                    'savings'
+                                                )
+                                            }
+                                            className={`rounded-xl border p-5 text-left transition ${
+                                                sourceAccount === 'savings'
+                                                    ? 'border-[#f0ae18] bg-amber-50 ring-2 ring-[#f0ae18]/10'
+                                                    : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
+                                            }`}
+                                        >
+
+                                            <div className="flex items-center justify-between gap-3">
+
+                                                <div>
+
+                                                    <p className="text-sm font-bold text-gray-900">
+                                                        Savings Account
+                                                    </p>
+
+                                                    <p className="mt-1 text-xs text-gray-500">
+                                                        Available balance
+                                                    </p>
+
+                                                </div>
+
+                                                <span
+                                                    className={`flex h-8 w-8 items-center justify-center rounded-full ${
+                                                        sourceAccount === 'savings'
+                                                            ? 'bg-[#f0ae18] text-white'
+                                                            : 'bg-gray-100 text-gray-400'
+                                                    }`}
+                                                >
+                                                    <Icon
+                                                        type="check"
+                                                        size={16}
+                                                    />
+                                                </span>
+
+                                            </div>
+
+                                            <p className="mt-4 text-2xl font-bold text-[#51169a]">
+                                                {formatCurrency(
+                                                    savingsBalance
+                                                )}
+                                            </p>
+
+                                        </button>
+
+                                    </div>
+
+                                    {errors.source_account && (
+                                        <p className="mt-2 text-xs text-red-500">
+                                            {errors.source_account}
+                                        </p>
+                                    )}
+
+                                </div>
+
+                                <div className="mb-8 border-t border-gray-200" />
+
+                                {/* RECIPIENT */}
+
+                                <div>
+
+                                    <div className="mb-5 flex items-center gap-3">
+
+                                        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#51169a] text-sm font-bold text-white">
+                                            2
+                                        </span>
+
+                                        <div>
+
+                                            <h3 className="text-base font-bold text-gray-900">
                                                 Recipient
                                             </h3>
 
-                                            <p className="text-xs text-[#777780]">
+                                            <p className="text-xs text-gray-500">
                                                 Who are you sending money to?
                                             </p>
+
                                         </div>
 
                                     </div>
 
                                     <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
 
-                                        {/* Name */}
+                                        {/* NAME */}
+
                                         <div className="md:col-span-2">
 
-                                            <label className="mb-2 block text-sm font-semibold text-[#3e3c44]">
+                                            <label className="mb-2 block text-sm font-semibold text-gray-700">
                                                 Recipient full name
                                             </label>
 
                                             <div className="relative">
+
                                                 <Icon
                                                     type="user"
                                                     size={19}
-                                                    className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8a8890]"
+                                                    className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
                                                 />
 
                                                 <input
@@ -502,23 +843,25 @@ export default function Transfer() {
                                                         )
                                                     }
                                                     placeholder="Enter recipient's full name"
-                                                    className="w-full rounded-lg border border-[#d7d7dc] bg-white py-3.5 pl-11 pr-4 text-sm text-[#29262f] outline-none transition placeholder:text-[#aaa9ae] focus:border-[#51169a] focus:ring-2 focus:ring-[#51169a]/10"
+                                                    className="w-full rounded-lg border border-gray-200 bg-white py-3.5 pl-11 pr-4 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-[#51169a] focus:ring-2 focus:ring-[#51169a]/10"
                                                     required
                                                 />
+
                                             </div>
 
                                             {errors.recipient_name && (
-                                                <p className="mt-1.5 text-xs text-red-600">
+                                                <p className="mt-1.5 text-xs text-red-500">
                                                     {errors.recipient_name}
                                                 </p>
                                             )}
 
                                         </div>
 
-                                        {/* Bank */}
+                                        {/* BANK */}
+
                                         <div className="md:col-span-2">
 
-                                            <label className="mb-2 block text-sm font-semibold text-[#3e3c44]">
+                                            <label className="mb-2 block text-sm font-semibold text-gray-700">
                                                 Bank
                                             </label>
 
@@ -527,7 +870,7 @@ export default function Transfer() {
                                                 <Icon
                                                     type="bank"
                                                     size={19}
-                                                    className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8a8890]"
+                                                    className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
                                                 />
 
                                                 <input
@@ -539,7 +882,7 @@ export default function Transfer() {
                                                         )
                                                     }
                                                     placeholder="Search for a bank"
-                                                    className="w-full rounded-lg border border-[#d7d7dc] py-3.5 pl-11 pr-4 text-sm outline-none transition placeholder:text-[#aaa9ae] focus:border-[#51169a] focus:ring-2 focus:ring-[#51169a]/10"
+                                                    className="w-full rounded-lg border border-gray-200 bg-white py-3.5 pl-11 pr-4 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-[#51169a] focus:ring-2 focus:ring-[#51169a]/10"
                                                 />
 
                                             </div>
@@ -553,10 +896,12 @@ export default function Transfer() {
                                                     );
 
                                                     setPinRequired(false);
+                                                    setPinError('');
                                                 }}
-                                                className="mt-2 w-full rounded-lg border border-[#d7d7dc] bg-white px-4 py-3.5 text-sm outline-none focus:border-[#51169a] focus:ring-2 focus:ring-[#51169a]/10"
+                                                className="mt-2 w-full rounded-lg border border-gray-200 bg-white px-4 py-3.5 text-sm text-gray-900 outline-none focus:border-[#51169a] focus:ring-2 focus:ring-[#51169a]/10"
                                                 required
                                             >
+
                                                 <option value="">
                                                     Select bank
                                                 </option>
@@ -571,11 +916,11 @@ export default function Transfer() {
                                                         </option>
                                                     )
                                                 )}
+
                                             </select>
 
-                                            {data.bank_name ===
-                                                'Comericafin' && (
-                                                <div className="mt-3 flex items-center gap-2 rounded-lg bg-[#f6f1fa] px-4 py-3">
+                                            {data.bank_name === 'Comericafin' && (
+                                                <div className="mt-3 flex items-center gap-2 rounded-lg bg-purple-50 px-4 py-3">
 
                                                     <Icon
                                                         type="check"
@@ -590,12 +935,19 @@ export default function Transfer() {
                                                 </div>
                                             )}
 
+                                            {errors.bank_name && (
+                                                <p className="mt-1.5 text-xs text-red-500">
+                                                    {errors.bank_name}
+                                                </p>
+                                            )}
+
                                         </div>
 
-                                        {/* Routing */}
+                                        {/* ROUTING */}
+
                                         <div>
 
-                                            <label className="mb-2 block text-sm font-semibold text-[#3e3c44]">
+                                            <label className="mb-2 block text-sm font-semibold text-gray-700">
                                                 Routing number
                                             </label>
 
@@ -614,22 +966,23 @@ export default function Transfer() {
                                                     )
                                                 }
                                                 placeholder="9-digit number"
-                                                className="w-full rounded-lg border border-[#d7d7dc] px-4 py-3.5 text-sm outline-none focus:border-[#51169a] focus:ring-2 focus:ring-[#51169a]/10"
+                                                className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3.5 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-[#51169a] focus:ring-2 focus:ring-[#51169a]/10"
                                                 required
                                             />
 
                                             {errors.routing_number && (
-                                                <p className="mt-1.5 text-xs text-red-600">
+                                                <p className="mt-1.5 text-xs text-red-500">
                                                     {errors.routing_number}
                                                 </p>
                                             )}
 
                                         </div>
 
-                                        {/* Account Number */}
+                                        {/* ACCOUNT NUMBER */}
+
                                         <div>
 
-                                            <label className="mb-2 block text-sm font-semibold text-[#3e3c44]">
+                                            <label className="mb-2 block text-sm font-semibold text-gray-700">
                                                 Account number
                                             </label>
 
@@ -643,23 +996,24 @@ export default function Transfer() {
                                                     )
                                                 }
                                                 placeholder="Account number"
-                                                className="w-full rounded-lg border border-[#d7d7dc] px-4 py-3.5 text-sm outline-none focus:border-[#51169a] focus:ring-2 focus:ring-[#51169a]/10"
+                                                className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3.5 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-[#51169a] focus:ring-2 focus:ring-[#51169a]/10"
                                                 required
                                             />
 
                                             {errors.account_number && (
-                                                <p className="mt-1.5 text-xs text-red-600">
+                                                <p className="mt-1.5 text-xs text-red-500">
                                                     {errors.account_number}
                                                 </p>
                                             )}
 
                                         </div>
 
-                                        {/* Account Type */}
+                                        {/* ACCOUNT TYPE */}
+
                                         <div className="md:col-span-2">
 
-                                            <label className="mb-2 block text-sm font-semibold text-[#3e3c44]">
-                                                Account type
+                                            <label className="mb-2 block text-sm font-semibold text-gray-700">
+                                                Recipient account type
                                             </label>
 
                                             <select
@@ -670,9 +1024,10 @@ export default function Transfer() {
                                                         e.target.value
                                                     )
                                                 }
-                                                className="w-full rounded-lg border border-[#d7d7dc] bg-white px-4 py-3.5 text-sm outline-none focus:border-[#51169a] focus:ring-2 focus:ring-[#51169a]/10"
+                                                className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3.5 text-sm text-gray-900 outline-none focus:border-[#51169a] focus:ring-2 focus:ring-[#51169a]/10"
                                                 required
                                             >
+
                                                 <option value="checking">
                                                     Checking
                                                 </option>
@@ -680,46 +1035,56 @@ export default function Transfer() {
                                                 <option value="savings">
                                                     Savings
                                                 </option>
+
                                             </select>
+
+                                            <p className="mt-2 text-xs text-gray-500">
+                                                Choose which account of the
+                                                recipient should receive the
+                                                funds.
+                                            </p>
 
                                         </div>
 
                                     </div>
+
                                 </div>
 
-                                {/* Divider */}
-                                <div className="my-8 border-t border-[#e8e8eb]" />
+                                <div className="my-8 border-t border-gray-200" />
 
-                                {/* Amount Section */}
+                                {/* AMOUNT */}
+
                                 <div>
 
                                     <div className="mb-5 flex items-center gap-3">
 
                                         <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#51169a] text-sm font-bold text-white">
-                                            2
+                                            3
                                         </span>
 
                                         <div>
-                                            <h3 className="text-base font-bold text-[#29262f]">
+
+                                            <h3 className="text-base font-bold text-gray-900">
                                                 Amount
                                             </h3>
 
-                                            <p className="text-xs text-[#777780]">
+                                            <p className="text-xs text-gray-500">
                                                 How much would you like to send?
                                             </p>
+
                                         </div>
 
                                     </div>
 
-                                    <div className="rounded-xl border border-[#dedee3] bg-[#fafafa] p-5">
+                                    <div className="rounded-xl border border-gray-200 bg-gray-50 p-5">
 
-                                        <label className="mb-3 block text-xs font-semibold uppercase tracking-wide text-[#777780]">
+                                        <label className="mb-3 block text-xs font-semibold uppercase tracking-wide text-gray-500">
                                             Transfer amount
                                         </label>
 
                                         <div className="relative">
 
-                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-semibold text-[#777780]">
+                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-semibold text-gray-400">
                                                 $
                                             </span>
 
@@ -735,25 +1100,48 @@ export default function Transfer() {
                                                     )
                                                 }
                                                 placeholder="0.00"
-                                                className="w-full rounded-lg border border-[#d2d2d7] bg-white py-4 pl-10 pr-4 text-2xl font-bold text-[#35106e] outline-none focus:border-[#51169a] focus:ring-2 focus:ring-[#51169a]/10"
+                                                className="w-full rounded-lg border border-gray-200 bg-white py-4 pl-10 pr-4 text-2xl font-bold text-[#51169a] outline-none focus:border-[#51169a] focus:ring-2 focus:ring-[#51169a]/10"
                                                 required
                                             />
 
                                         </div>
 
                                         {data.amount && (
-                                            <p className="mt-3 text-xs text-[#777780]">
+                                            <p className="mt-3 text-xs text-gray-500">
+
                                                 You are sending{' '}
-                                                <span className="font-semibold text-[#35106e]">
+
+                                                <span className="font-semibold text-[#51169a]">
                                                     {formatCurrency(
                                                         data.amount
                                                     )}
-                                                </span>
+                                                </span>{' '}
+
+                                                from your{' '}
+
+                                                <span className="font-semibold capitalize text-[#51169a]">
+                                                    {data.source_account}
+                                                </span>{' '}
+
+                                                account.
+
                                             </p>
                                         )}
 
+                                        <p className="mt-2 text-xs text-gray-500">
+
+                                            Available in selected account:{' '}
+
+                                            <span className="font-semibold text-[#51169a]">
+                                                {formatCurrency(
+                                                    selectedBalance
+                                                )}
+                                            </span>
+
+                                        </p>
+
                                         {errors.amount && (
-                                            <p className="mt-1.5 text-xs text-red-600">
+                                            <p className="mt-1.5 text-xs text-red-500">
                                                 {errors.amount}
                                             </p>
                                         )}
@@ -762,14 +1150,18 @@ export default function Transfer() {
 
                                 </div>
 
-                                {/* Description */}
+                                {/* DESCRIPTION */}
+
                                 <div className="mt-6">
 
-                                    <label className="mb-2 block text-sm font-semibold text-[#3e3c44]">
+                                    <label className="mb-2 block text-sm font-semibold text-gray-700">
+
                                         Description
-                                        <span className="ml-1 font-normal text-[#96959b]">
+
+                                        <span className="ml-1 font-normal text-gray-400">
                                             (optional)
                                         </span>
+
                                     </label>
 
                                     <textarea
@@ -782,41 +1174,54 @@ export default function Transfer() {
                                             )
                                         }
                                         placeholder="Add a note for this transfer"
-                                        className="w-full resize-none rounded-lg border border-[#d7d7dc] px-4 py-3.5 text-sm outline-none placeholder:text-[#aaa9ae] focus:border-[#51169a] focus:ring-2 focus:ring-[#51169a]/10"
+                                        className="w-full resize-none rounded-lg border border-gray-200 bg-white px-4 py-3.5 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-[#51169a] focus:ring-2 focus:ring-[#51169a]/10"
                                     />
+
+                                    {errors.description && (
+                                        <p className="mt-1.5 text-xs text-red-500">
+                                            {errors.description}
+                                        </p>
+                                    )}
 
                                 </div>
 
-                                {/* Security Notice */}
-                                <div className="mt-7 flex gap-3 rounded-lg border border-[#e3d9ec] bg-[#f8f4fb] p-4">
+                                {/* SECURITY */}
 
-                                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#e9def3] text-[#51169a]">
+                                <div className="mt-7 flex gap-3 rounded-lg border border-purple-100 bg-purple-50 p-4">
+
+                                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-[#51169a]">
+
                                         <Icon
                                             type="shield"
                                             size={18}
                                         />
+
                                     </div>
 
                                     <div>
-                                        <p className="text-sm font-semibold text-[#35106e]">
+
+                                        <p className="text-sm font-semibold text-gray-900">
                                             Secure transfer
                                         </p>
 
-                                        <p className="mt-1 text-xs leading-5 text-[#6f6978]">
+                                        <p className="mt-1 text-xs leading-5 text-gray-500">
                                             Review the recipient information
                                             carefully before submitting your
                                             transfer.
                                         </p>
+
                                     </div>
 
                                 </div>
 
-                                {/* Submit */}
+                                {/* SUBMIT */}
+
                                 <button
                                     type="submit"
                                     disabled={processing}
                                     className="mt-7 flex w-full items-center justify-center gap-3 rounded-lg bg-[#51169a] px-6 py-4 text-sm font-bold text-white shadow-sm transition hover:bg-[#431180] disabled:cursor-not-allowed disabled:opacity-60"
                                 >
+
                                     {processing
                                         ? 'Processing...'
                                         : 'Review Transfer'}
@@ -827,54 +1232,118 @@ export default function Transfer() {
                                             size={18}
                                         />
                                     )}
+
                                 </button>
 
                             </form>
+
                         </div>
 
-                        {/* Right Sidebar */}
+                        {/* RIGHT SIDEBAR */}
+
                         <aside className="space-y-5">
 
-                            {/* Transfer Summary */}
-                            <div className="rounded-xl border border-[#dedee3] bg-white p-5 shadow-[0_4px_20px_rgba(0,0,0,0.04)]">
+                            {/* SELECTED ACCOUNT */}
 
-                                <h2 className="text-base font-bold text-[#29262f]">
+                            <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+
+                                <h2 className="text-base font-bold text-gray-900">
+                                    Sending From
+                                </h2>
+
+                                <div className="mt-5 rounded-xl bg-gray-50 p-4">
+
+                                    <p className="text-xs uppercase tracking-wide text-gray-500">
+                                        Account
+                                    </p>
+
+                                    <p className="mt-1 text-base font-bold capitalize text-[#51169a]">
+                                        {data.source_account} Account
+                                    </p>
+
+                                    <p className="mt-3 text-xs text-gray-500">
+                                        Available Balance
+                                    </p>
+
+                                    <p className="mt-1 text-2xl font-bold text-[#51169a]">
+                                        {formatCurrency(selectedBalance)}
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+                            {/* SUMMARY */}
+
+                            <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+
+                                <h2 className="text-base font-bold text-gray-900">
                                     Transfer summary
                                 </h2>
 
                                 <div className="mt-5 space-y-4">
 
                                     <div className="flex items-center justify-between gap-4">
-                                        <span className="text-xs text-[#777780]">
-                                            Recipient
+
+                                        <span className="text-xs text-gray-500">
+                                            From
                                         </span>
 
-                                        <span className="max-w-[150px] truncate text-right text-xs font-semibold text-[#29262f]">
-                                            {data.recipient_name || '—'}
+                                        <span className="text-right text-xs font-semibold capitalize text-gray-800">
+                                            {data.source_account}
                                         </span>
+
                                     </div>
 
                                     <div className="flex items-center justify-between gap-4">
-                                        <span className="text-xs text-[#777780]">
+
+                                        <span className="text-xs text-gray-500">
+                                            Recipient
+                                        </span>
+
+                                        <span className="max-w-[150px] truncate text-right text-xs font-semibold text-gray-800">
+                                            {data.recipient_name || '—'}
+                                        </span>
+
+                                    </div>
+
+                                    <div className="flex items-center justify-between gap-4">
+
+                                        <span className="text-xs text-gray-500">
+                                            Destination
+                                        </span>
+
+                                        <span className="text-right text-xs font-semibold capitalize text-gray-800">
+                                            {data.account_type}
+                                        </span>
+
+                                    </div>
+
+                                    <div className="flex items-center justify-between gap-4">
+
+                                        <span className="text-xs text-gray-500">
                                             Bank
                                         </span>
 
-                                        <span className="max-w-[150px] truncate text-right text-xs font-semibold text-[#29262f]">
+                                        <span className="max-w-[150px] truncate text-right text-xs font-semibold text-gray-800">
                                             {data.bank_name || '—'}
                                         </span>
+
                                     </div>
 
-                                    <div className="border-t border-[#e8e8eb]" />
+                                    <div className="border-t border-gray-200" />
 
                                     <div className="flex items-end justify-between gap-4">
 
-                                        <span className="text-xs text-[#777780]">
+                                        <span className="text-xs text-gray-500">
                                             Amount
                                         </span>
 
-                                        <span className="text-xl font-bold text-[#35106e]">
+                                        <span className="text-xl font-bold text-[#51169a]">
                                             {data.amount
-                                                ? formatCurrency(data.amount)
+                                                ? formatCurrency(
+                                                      data.amount
+                                                  )
                                                 : '$0.00'}
                                         </span>
 
@@ -884,35 +1353,39 @@ export default function Transfer() {
 
                             </div>
 
-                            {/* Help */}
-                            <div className="rounded-xl border border-[#dedee3] bg-white p-5">
+                            {/* HELP */}
+
+                            <div className="rounded-xl border border-gray-200 bg-white p-5">
 
                                 <div className="flex items-center gap-3">
 
-                                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#f1eafa] text-[#51169a]">
+                                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-purple-50 text-[#51169a]">
+
                                         <Icon
                                             type="lock"
                                             size={18}
                                         />
+
                                     </div>
 
-                                    <h3 className="text-sm font-bold text-[#29262f]">
+                                    <h3 className="text-sm font-bold text-gray-900">
                                         Stay secure
                                     </h3>
 
                                 </div>
 
-                                <p className="mt-3 text-xs leading-5 text-[#707078]">
+                                <p className="mt-3 text-xs leading-5 text-gray-500">
                                     Never share your password, PIN, or other
                                     account credentials with anyone.
                                 </p>
 
                             </div>
 
-                            {/* Steps */}
-                            <div className="rounded-xl border border-[#dedee3] bg-white p-5">
+                            {/* STEPS */}
 
-                                <h3 className="text-sm font-bold text-[#29262f]">
+                            <div className="rounded-xl border border-gray-200 bg-white p-5">
+
+                                <h3 className="text-sm font-bold text-gray-900">
                                     Transfer process
                                 </h3>
 
@@ -925,14 +1398,16 @@ export default function Transfer() {
                                         </div>
 
                                         <div>
-                                            <p className="text-xs font-semibold text-[#29262f]">
-                                                Enter recipient
+
+                                            <p className="text-xs font-semibold text-gray-800">
+                                                Choose account
                                             </p>
 
-                                            <p className="mt-1 text-[11px] leading-4 text-[#777780]">
-                                                Provide the recipient's account
-                                                information.
+                                            <p className="mt-1 text-[11px] leading-4 text-gray-500">
+                                                Select Checking or Savings as
+                                                the source account.
                                             </p>
+
                                         </div>
 
                                     </div>
@@ -944,14 +1419,16 @@ export default function Transfer() {
                                         </div>
 
                                         <div>
-                                            <p className="text-xs font-semibold text-[#29262f]">
-                                                Enter amount
+
+                                            <p className="text-xs font-semibold text-gray-800">
+                                                Enter recipient
                                             </p>
 
-                                            <p className="mt-1 text-[11px] leading-4 text-[#777780]">
-                                                Choose the amount you want to
-                                                send.
+                                            <p className="mt-1 text-[11px] leading-4 text-gray-500">
+                                                Provide the recipient's account
+                                                information.
                                             </p>
+
                                         </div>
 
                                     </div>
@@ -963,14 +1440,37 @@ export default function Transfer() {
                                         </div>
 
                                         <div>
-                                            <p className="text-xs font-semibold text-[#29262f]">
+
+                                            <p className="text-xs font-semibold text-gray-800">
+                                                Enter amount
+                                            </p>
+
+                                            <p className="mt-1 text-[11px] leading-4 text-gray-500">
+                                                Choose the amount you want to
+                                                send.
+                                            </p>
+
+                                        </div>
+
+                                    </div>
+
+                                    <div className="flex gap-3">
+
+                                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#51169a] text-xs font-bold text-white">
+                                            4
+                                        </div>
+
+                                        <div>
+
+                                            <p className="text-xs font-semibold text-gray-800">
                                                 Review and submit
                                             </p>
 
-                                            <p className="mt-1 text-[11px] leading-4 text-[#777780]">
+                                            <p className="mt-1 text-[11px] leading-4 text-gray-500">
                                                 Check the details before
                                                 completing the transfer.
                                             </p>
+
                                         </div>
 
                                     </div>
@@ -982,8 +1482,241 @@ export default function Transfer() {
                         </aside>
 
                     </div>
+
                 </div>
+
             </div>
+
+            {/* =========================================================
+                4-DIGIT PIN OVERLAY
+            ========================================================= */}
+
+            {pinRequired && (
+                <div
+                    className="fixed inset-0 z-[100] flex items-center justify-center bg-gray-900/50 px-4 backdrop-blur-sm"
+                    onMouseDown={(e) => {
+                        if (e.target === e.currentTarget) {
+                            setPinRequired(false);
+                            setTransferPin('');
+                            setPinError('');
+                        }
+                    }}
+                >
+
+                    <div className="w-full max-w-md overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl">
+
+                        {/* HEADER */}
+
+                        <div className="border-b border-gray-200 px-6 py-5">
+
+                            <div className="flex items-center justify-between">
+
+                                <div className="flex items-center gap-3">
+
+                                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-purple-50 text-[#51169a]">
+
+                                        <Icon
+                                            type="lock"
+                                            size={21}
+                                        />
+
+                                    </div>
+
+                                    <div>
+
+                                        <h2 className="text-lg font-bold text-gray-900">
+                                            Confirm Transfer
+                                        </h2>
+
+                                        <p className="mt-0.5 text-xs text-gray-500">
+                                            Security verification required
+                                        </p>
+
+                                    </div>
+
+                                </div>
+
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setPinRequired(false);
+                                        setTransferPin('');
+                                        setPinError('');
+                                    }}
+                                    className="flex h-9 w-9 items-center justify-center rounded-lg text-gray-400 transition hover:bg-gray-100 hover:text-gray-700"
+                                >
+
+                                    <Icon
+                                        type="close"
+                                        size={19}
+                                    />
+
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                        {/* BODY */}
+
+                        <div className="px-6 py-7">
+
+                            {/* TRANSFER INFORMATION */}
+
+                            <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+
+                                <div className="flex items-center justify-between gap-4">
+
+                                    <div>
+
+                                        <p className="text-xs text-gray-500">
+                                            Transfer amount
+                                        </p>
+
+                                        <p className="mt-1 text-xl font-bold text-[#51169a]">
+                                            {formatCurrency(data.amount)}
+                                        </p>
+
+                                    </div>
+
+                                    <div className="text-right">
+
+                                        <p className="text-xs text-gray-500">
+                                            To
+                                        </p>
+
+                                        <p className="mt-1 max-w-[150px] truncate text-sm font-semibold text-gray-800">
+                                            {data.recipient_name ||
+                                                'Recipient'}
+                                        </p>
+
+                                    </div>
+
+                                </div>
+
+                                <div className="mt-3 border-t border-gray-200 pt-3">
+
+                                    <p className="text-xs text-gray-500">
+                                        Destination bank
+                                    </p>
+
+                                    <p className="mt-1 text-sm font-semibold text-gray-800">
+                                        {data.bank_name}
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+                            <div className="mt-6 text-center">
+
+                                <h3 className="text-base font-semibold text-gray-900">
+                                    Enter your 4-digit PIN
+                                </h3>
+
+                                <p className="mt-2 text-sm leading-5 text-gray-500">
+                                    Enter your transfer PIN to authorize this
+                                    transaction.
+                                </p>
+
+                            </div>
+
+                            {/* PIN */}
+
+                            <div className="mt-6">
+
+                                <input
+                                    type="password"
+                                    inputMode="numeric"
+                                    autoComplete="off"
+                                    maxLength={4}
+                                    autoFocus
+                                    value={transferPin}
+                                    onChange={(e) => {
+
+                                        const value =
+                                            e.target.value
+                                                .replace(/\D/g, '')
+                                                .slice(0, 4);
+
+                                        setTransferPin(value);
+                                        setPinError('');
+
+                                    }}
+                                    onKeyDown={(e) => {
+
+                                        if (e.key === 'Enter') {
+                                            confirmPin();
+                                        }
+
+                                    }}
+                                    placeholder="••••"
+                                    className="w-full rounded-xl border border-gray-200 bg-white px-4 py-4 text-center text-3xl font-bold tracking-[0.7em] text-gray-900 outline-none placeholder:text-gray-300 focus:border-[#51169a] focus:ring-2 focus:ring-[#51169a]/10"
+                                />
+
+                                {pinError && (
+                                    <p className="mt-3 text-center text-xs font-medium text-red-500">
+                                        {pinError}
+                                    </p>
+                                )}
+
+                            </div>
+
+                            {/* SECURITY NOTICE */}
+
+                            <div className="mt-5 flex gap-3 rounded-xl border border-purple-100 bg-purple-50 p-4">
+
+                                <div className="shrink-0 text-[#51169a]">
+
+                                    <Icon
+                                        type="shield"
+                                        size={18}
+                                    />
+
+                                </div>
+
+                                <p className="text-xs leading-5 text-gray-500">
+                                    Never share your transfer PIN with anyone.
+                                    Your PIN is used to authorize this
+                                    transaction.
+                                </p>
+
+                            </div>
+
+                            {/* ACTIONS */}
+
+                            <div className="mt-6 grid grid-cols-2 gap-3">
+
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setPinRequired(false);
+                                        setTransferPin('');
+                                        setPinError('');
+                                    }}
+                                    className="rounded-xl border border-gray-200 bg-white px-4 py-3.5 text-sm font-semibold text-gray-600 transition hover:bg-gray-50 hover:text-gray-900"
+                                >
+                                    Cancel
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={confirmPin}
+                                    disabled={transferPin.length !== 4}
+                                    className="rounded-xl bg-[#51169a] px-4 py-3.5 text-sm font-bold text-white transition hover:bg-[#431180] disabled:cursor-not-allowed disabled:opacity-40"
+                                >
+                                     Transfer
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+            )}
+
         </CustomerLayout>
     );
 }

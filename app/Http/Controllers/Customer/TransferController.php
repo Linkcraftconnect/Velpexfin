@@ -13,7 +13,7 @@ use Inertia\Inertia;
 class TransferController extends Controller
 {
     /**
-     * Show transfer form.
+     * Show the transfer form.
      */
     public function create(Request $request)
     {
@@ -23,11 +23,43 @@ class TransferController extends Controller
             return redirect()->route('login');
         }
 
-        return Inertia::render('Customers/Transfer');
+        $customer = User::where('id', $customerId)
+            ->where('role', 'customer')
+            ->where('status', 'active')
+            ->first();
+
+        if (!$customer) {
+            $request->session()->forget('customer_id');
+
+            return redirect()->route('login');
+        }
+
+        return Inertia::render('Customers/Transfer', [
+            'accounts' => [
+                [
+                    'type' => 'checking',
+                    'label' => 'Checking Account',
+                    'balance' => (float) $customer->balance,
+                ],
+                [
+                    'type' => 'savings',
+                    'label' => 'Savings Account',
+                    'balance' => (float) $customer->savings_balance,
+                ],
+            ],
+        ]);
     }
 
     /**
-     * Process Comericafin transfer.
+     * Process a customer-to-customer transfer.
+     *
+     * source_account:
+     *   checking = sender->balance
+     *   savings  = sender->savings_balance
+     *
+     * account_type:
+     *   checking = recipient->balance
+     *   savings  = recipient->savings_balance
      */
     public function store(Request $request)
     {
@@ -38,24 +70,62 @@ class TransferController extends Controller
         }
 
         $validated = $request->validate([
-            'recipient_name' => ['required', 'string', 'max:255'],
-            'bank_name' => ['required', 'string', 'max:255'],
-            'routing_number' => ['required', 'digits:9'],
-            'account_number' => ['required', 'string', 'max:255'],
-            'account_type' => ['required', 'in:checking,savings'],
-            'amount' => ['required', 'numeric', 'min:0.01'],
-            'description' => ['nullable', 'string', 'max:500'],
+            'source_account' => [
+                'required',
+                'in:checking,savings',
+            ],
+
+            'recipient_name' => [
+                'required',
+                'string',
+                'max:255',
+            ],
+
+            'bank_name' => [
+                'required',
+                'string',
+                'max:255',
+            ],
+
+            'routing_number' => [
+                'required',
+                'digits:9',
+            ],
+
+            'account_number' => [
+                'required',
+                'string',
+                'max:255',
+            ],
+
+            'account_type' => [
+                'required',
+                'in:checking,savings',
+            ],
+
+            'amount' => [
+                'required',
+                'numeric',
+                'min:0.01',
+            ],
+
+            'description' => [
+                'nullable',
+                'string',
+                'max:500',
+            ],
         ]);
 
         /*
         |--------------------------------------------------------------------------
-        | Only Comericafin transfers can continue
+        | Comericafin destination only
         |--------------------------------------------------------------------------
         */
 
         if ($validated['bank_name'] !== 'Comericafin') {
             return back()->withErrors([
-                'bank_name' => 'This transfer destination requires a Transfer PIN.',
+                'bank_name' =>
+                    'This transfer destination requires a Transfer PIN.',
             ]);
         }
 
@@ -71,6 +141,8 @@ class TransferController extends Controller
             ->first();
 
         if (!$sender) {
+            $request->session()->forget('customer_id');
+
             return redirect()->route('login');
         }
 
@@ -80,27 +152,35 @@ class TransferController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $recipient = User::where('account_number', $validated['account_number'])
-            ->where('routing_number', $validated['routing_number'])
+        $recipient = User::where(
+                'account_number',
+                $validated['account_number']
+            )
+            ->where(
+                'routing_number',
+                $validated['routing_number']
+            )
             ->where('role', 'customer')
             ->where('status', 'active')
             ->first();
 
         if (!$recipient) {
             return back()->withErrors([
-                'account_number' => 'The Comericafin account could not be found.',
+                'account_number' =>
+                    'The Comericafin account could not be found.',
             ]);
         }
 
         /*
         |--------------------------------------------------------------------------
-        | Prevent sending to yourself
+        | Prevent self-transfer
         |--------------------------------------------------------------------------
         */
 
-        if ($sender->id === $recipient->id) {
+        if ((int) $sender->id === (int) $recipient->id) {
             return back()->withErrors([
-                'account_number' => 'You cannot transfer funds to your own account.',
+                'account_number' =>
+                    'You cannot transfer funds to your own account.',
             ]);
         }
 
@@ -122,17 +202,29 @@ class TransferController extends Controller
             ]);
         }
 
+        $amount = (float) $validated['amount'];
+
+        $sourceAccount = $validated['source_account'];
+        $recipientAccount = $validated['account_type'];
+
         /*
         |--------------------------------------------------------------------------
-        | Check balance
+        | Read ONLY the selected sender account
         |--------------------------------------------------------------------------
         */
 
-        $amount = (float) $validated['amount'];
+        $senderBalance = $sourceAccount === 'checking'
+            ? (float) $sender->balance
+            : (float) $sender->savings_balance;
 
-        if ((float) $sender->balance < $amount) {
+        if ($senderBalance < $amount) {
+            $accountLabel = $sourceAccount === 'checking'
+                ? 'checking'
+                : 'savings';
+
             return back()->withErrors([
-                'amount' => 'Insufficient available balance.',
+                'amount' =>
+                    "Insufficient available balance in your {$accountLabel} account.",
             ]);
         }
 
@@ -146,29 +238,57 @@ class TransferController extends Controller
             $sender,
             $recipient,
             $amount,
+            $sourceAccount,
+            $recipientAccount,
             $validated
         ) {
-            $sender->balance = (float) $sender->balance - $amount;
+            /*
+            |--------------------------------------------------------------------------
+            | Deduct from ONLY the selected sender account
+            |--------------------------------------------------------------------------
+            */
+
+            if ($sourceAccount === 'checking') {
+                $sender->balance = (float) $sender->balance - $amount;
+            } else {
+                $sender->savings_balance =
+                    (float) $sender->savings_balance - $amount;
+            }
+
             $sender->save();
 
-            $recipient->balance = (float) $recipient->balance + $amount;
+            /*
+            |--------------------------------------------------------------------------
+            | Credit ONLY the selected recipient account
+            |--------------------------------------------------------------------------
+            */
+
+            if ($recipientAccount === 'checking') {
+                $recipient->balance =
+                    (float) $recipient->balance + $amount;
+            } else {
+                $recipient->savings_balance =
+                    (float) $recipient->savings_balance + $amount;
+            }
+
             $recipient->save();
+
+            /*
+            |--------------------------------------------------------------------------
+            | Record transaction
+            |--------------------------------------------------------------------------
+            */
 
             return Transfer::create([
                 'sender_id' => $sender->id,
                 'recipient_id' => $recipient->id,
                 'amount' => $amount,
+                'source_account' => $sourceAccount,
                 'reference' => 'TRX-' . strtoupper(Str::random(12)),
                 'status' => 'completed',
                 'description' => $validated['description'] ?? null,
             ]);
         });
-
-        /*
-        |--------------------------------------------------------------------------
-        | Go to transfer completion screen
-        |--------------------------------------------------------------------------
-        */
 
         return redirect()->route(
             'customer.transfer.complete',
@@ -189,7 +309,7 @@ class TransferController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | Make sure this transfer belongs to the logged-in customer
+        | Only the sender can see this completion page
         |--------------------------------------------------------------------------
         */
 
@@ -205,14 +325,33 @@ class TransferController extends Controller
         return Inertia::render('Customers/TransferComplete', [
             'transfer' => [
                 'id' => $transfer->id,
-                'recipient_name' => $transfer->recipient?->name,
-                'recipient_account' => $transfer->recipient?->account_number,
+
+                'recipient_name' =>
+                    $transfer->recipient?->name,
+
+                'recipient_account' =>
+                    $transfer->recipient?->account_number,
+
                 'bank_name' => 'Comericafin',
+
                 'amount' => $transfer->amount,
-                'reference' => $transfer->reference,
-                'status' => $transfer->status,
-                'description' => $transfer->description,
-                'created_at' => $transfer->created_at?->format('M d, Y h:i A'),
+
+                'source_account' =>
+                    $transfer->source_account,
+
+                'reference' =>
+                    $transfer->reference,
+
+                'status' =>
+                    $transfer->status,
+
+                'description' =>
+                    $transfer->description,
+
+                'created_at' =>
+                    $transfer->created_at?->format(
+                        'M d, Y h:i A'
+                    ),
             ],
         ]);
     }

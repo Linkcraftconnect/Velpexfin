@@ -6,23 +6,59 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            //
-        });
+        if (! Schema::hasColumn('users', 'phone')) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->string('phone')->nullable()->after('email');
+            });
+        }
+
+        if (! Schema::hasColumn('users', 'account_number')) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->string('account_number')->nullable()->unique()->after('routing_number');
+            });
+        }
+
+        if (! Schema::hasColumn('users', 'balance')) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->decimal('balance', 15, 2)
+                    ->default(0.00)
+                    ->after('account_number');
+            });
+        }
+
+        if (! Schema::hasColumn('users', 'profile_picture')) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->string('profile_picture')->nullable()->after('balance');
+            });
+        }
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            //
-        });
+        if (Schema::hasColumn('users', 'profile_picture')) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->dropColumn('profile_picture');
+            });
+        }
+
+        if (Schema::hasColumn('users', 'balance')) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->dropColumn('balance');
+            });
+        }
+
+        if (Schema::hasColumn('users', 'account_number')) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->dropColumn('account_number');
+            });
+        }
+
+        if (Schema::hasColumn('users', 'phone')) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->dropColumn('phone');
+            });
+        }
     }
 };
