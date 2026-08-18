@@ -60,9 +60,27 @@ const Icon = ({ type, size = 22, className = '' }) => {
         case 'more':
             return (
                 <svg {...common}>
-                    <circle cx="5" cy="12" r="1.5" fill="currentColor" stroke="none" />
-                    <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none" />
-                    <circle cx="19" cy="12" r="1.5" fill="currentColor" stroke="none" />
+                    <circle
+                        cx="5"
+                        cy="12"
+                        r="1.5"
+                        fill="currentColor"
+                        stroke="none"
+                    />
+                    <circle
+                        cx="12"
+                        cy="12"
+                        r="1.5"
+                        fill="currentColor"
+                        stroke="none"
+                    />
+                    <circle
+                        cx="19"
+                        cy="12"
+                        r="1.5"
+                        fill="currentColor"
+                        stroke="none"
+                    />
                 </svg>
             );
 
@@ -161,6 +179,24 @@ const Icon = ({ type, size = 22, className = '' }) => {
                 </svg>
             );
 
+        case 'eye':
+            return (
+                <svg {...common}>
+                    <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z" />
+                    <circle cx="12" cy="12" r="2.5" />
+                </svg>
+            );
+
+        case 'eye-off':
+            return (
+                <svg {...common}>
+                    <path d="m3 3 18 18" />
+                    <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8" />
+                    <path d="M9.9 5.2A10.7 10.7 0 0 1 12 5c6.5 0 10 7 10 7a17.8 17.8 0 0 1-3.1 4.1" />
+                    <path d="M6.1 6.1C3.6 7.8 2 12 2 12a17.9 17.9 0 0 0 4.2 4.6A10.7 10.7 0 0 0 12 19c1.4 0 2.7-.3 3.9-.8" />
+                </svg>
+            );
+
         default:
             return null;
     }
@@ -168,6 +204,10 @@ const Icon = ({ type, size = 22, className = '' }) => {
 
 export default function Dashboard({ user, transactions = [] }) {
     const [showCardRequest, setShowCardRequest] = useState(false);
+
+    // Independent visibility controls.
+    const [showCheckingBalance, setShowCheckingBalance] = useState(true);
+    const [showSavingsBalance, setShowSavingsBalance] = useState(true);
 
     const customerName = user?.name || 'Customer';
 
@@ -177,12 +217,19 @@ export default function Dashboard({ user, transactions = [] }) {
     const accountNumber = maskAccountNumber(user?.account_number);
     const routingNumber = user?.routing_number || 'Not available';
 
+    const displayedCheckingBalance = showCheckingBalance
+        ? checkingBalance
+        : '••••••••';
+
+    const displayedSavingsBalance = showSavingsBalance
+        ? savingsBalance
+        : '••••••••';
+
     return (
         <CustomerLayout user={user}>
             <Head title="Customer Dashboard" />
 
             <div className="min-h-screen bg-[#eeeeee] text-[#17152b]">
-
                 <div className="mx-auto w-full max-w-[1500px] px-4 py-6 sm:px-6 lg:px-8">
 
                     {/* DASHBOARD HEADER */}
@@ -202,7 +249,6 @@ export default function Dashboard({ user, transactions = [] }) {
 
                             <div className="flex flex-col gap-7 lg:flex-row lg:items-center lg:justify-between">
 
-                                {/* HEADER TEXT ONLY */}
                                 <div>
                                     <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#f5d98a]">
                                         Customer Dashboard
@@ -378,7 +424,10 @@ export default function Dashboard({ user, transactions = [] }) {
                                                 <div className="flex items-center">
 
                                                     <span className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-[#5d17a3] to-[#35106e] text-white shadow-md">
-                                                        <Icon type="checking" size={22} />
+                                                        <Icon
+                                                            type="checking"
+                                                            size={22}
+                                                        />
                                                     </span>
 
                                                     <div className="ml-4">
@@ -403,12 +452,51 @@ export default function Dashboard({ user, transactions = [] }) {
 
                                             <div className="mt-8">
 
-                                                <p className="text-xs font-medium text-[#6b6579]">
-                                                    Available Balance
-                                                </p>
+                                                <div className="flex items-center gap-2">
 
-                                                <p className="mt-1 text-3xl font-bold text-[#40127e]">
-                                                    {checkingBalance}
+                                                    <p className="text-xs font-medium text-[#6b6579]">
+                                                        Available Balance
+                                                    </p>
+
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            setShowCheckingBalance(
+                                                                (current) => !current
+                                                            )
+                                                        }
+                                                        aria-label={
+                                                            showCheckingBalance
+                                                                ? 'Hide checking balance'
+                                                                : 'Show checking balance'
+                                                        }
+                                                        title={
+                                                            showCheckingBalance
+                                                                ? 'Hide checking balance'
+                                                                : 'Show checking balance'
+                                                        }
+                                                        className="flex h-7 w-7 items-center justify-center rounded-md text-[#625d73] transition hover:bg-[#f3eef8] hover:text-[#51169a]"
+                                                    >
+                                                        <Icon
+                                                            type={
+                                                                showCheckingBalance
+                                                                    ? 'eye'
+                                                                    : 'eye-off'
+                                                            }
+                                                            size={17}
+                                                        />
+                                                    </button>
+
+                                                </div>
+
+                                                <p
+                                                    className={`mt-1 font-bold text-[#40127e] ${
+                                                        showCheckingBalance
+                                                            ? 'text-3xl'
+                                                            : 'text-2xl tracking-[0.18em]'
+                                                    }`}
+                                                >
+                                                    {displayedCheckingBalance}
                                                 </p>
 
                                             </div>
@@ -442,7 +530,10 @@ export default function Dashboard({ user, transactions = [] }) {
                                                 <div className="flex items-center">
 
                                                     <span className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-[#b28a32] to-[#765815] text-white shadow-md">
-                                                        <Icon type="savings" size={22} />
+                                                        <Icon
+                                                            type="savings"
+                                                            size={22}
+                                                        />
                                                     </span>
 
                                                     <div className="ml-4">
@@ -467,12 +558,51 @@ export default function Dashboard({ user, transactions = [] }) {
 
                                             <div className="mt-8">
 
-                                                <p className="text-xs font-medium text-[#6b6579]">
-                                                    Available Balance
-                                                </p>
+                                                <div className="flex items-center gap-2">
 
-                                                <p className="mt-1 text-3xl font-bold text-[#40127e]">
-                                                    {savingsBalance}
+                                                    <p className="text-xs font-medium text-[#6b6579]">
+                                                        Available Balance
+                                                    </p>
+
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            setShowSavingsBalance(
+                                                                (current) => !current
+                                                            )
+                                                        }
+                                                        aria-label={
+                                                            showSavingsBalance
+                                                                ? 'Hide savings balance'
+                                                                : 'Show savings balance'
+                                                        }
+                                                        title={
+                                                            showSavingsBalance
+                                                                ? 'Hide savings balance'
+                                                                : 'Show savings balance'
+                                                        }
+                                                        className="flex h-7 w-7 items-center justify-center rounded-md text-[#625d73] transition hover:bg-[#f3eef8] hover:text-[#51169a]"
+                                                    >
+                                                        <Icon
+                                                            type={
+                                                                showSavingsBalance
+                                                                    ? 'eye'
+                                                                    : 'eye-off'
+                                                            }
+                                                            size={17}
+                                                        />
+                                                    </button>
+
+                                                </div>
+
+                                                <p
+                                                    className={`mt-1 font-bold text-[#40127e] ${
+                                                        showSavingsBalance
+                                                            ? 'text-3xl'
+                                                            : 'text-2xl tracking-[0.18em]'
+                                                    }`}
+                                                >
+                                                    {displayedSavingsBalance}
                                                 </p>
 
                                             </div>
@@ -518,7 +648,10 @@ export default function Dashboard({ user, transactions = [] }) {
                                                 <div className="flex items-center gap-2">
 
                                                     <div className="flex h-9 w-9 items-center justify-center rounded-full border-2 text-white">
-                                                        <Icon type="shield" size={22} />
+                                                        <Icon
+                                                            type="shield"
+                                                            size={22}
+                                                        />
                                                     </div>
 
                                                     <div>
@@ -544,7 +677,9 @@ export default function Dashboard({ user, transactions = [] }) {
                                                 <div className="relative h-[31px] w-[43px] overflow-hidden rounded-md border border-[#c99b29] bg-gradient-to-br from-[#ffe48a] via-[#e5b83e] to-[#a9780f]">
 
                                                     <div className="absolute left-1/2 top-0 h-full w-px bg-[#9b741d]/70" />
+
                                                     <div className="absolute left-0 top-1/2 h-px w-full bg-[#9b741d]/70" />
+
                                                     <div className="absolute left-2 top-2 h-[10px] w-[15px] rounded-sm border border-[#9b741d]/70" />
 
                                                 </div>
@@ -582,7 +717,9 @@ export default function Dashboard({ user, transactions = [] }) {
                                                 </p>
 
                                                 <p className="mt-1 text-[9px] font-semibold tracking-[0.12em] text-white/85">
-                                                    {maskAccountNumber(user?.account_number)}
+                                                    {maskAccountNumber(
+                                                        user?.account_number
+                                                    )}
                                                 </p>
 
                                             </div>
@@ -608,12 +745,15 @@ export default function Dashboard({ user, transactions = [] }) {
                                             </div>
 
                                             <p className="mt-3 text-sm leading-6 text-[#625d73]">
-                                                Request a Comericafin card for your account.
+                                                Request a Comericafin card for
+                                                your account.
                                             </p>
 
                                             <button
                                                 type="button"
-                                                onClick={() => setShowCardRequest(true)}
+                                                onClick={() =>
+                                                    setShowCardRequest(true)
+                                                }
                                                 className="mt-5 w-full rounded-lg border border-[#a47c22] bg-white px-4 py-3 text-sm font-semibold text-[#806019] transition hover:bg-[#faf7ef]"
                                             >
                                                 Request Card Delivery
@@ -634,7 +774,9 @@ export default function Dashboard({ user, transactions = [] }) {
                                         </h3>
 
                                         <Link
-                                            href={route('customer.transactions')}
+                                            href={route(
+                                                'customer.transactions'
+                                            )}
                                             className="text-xs font-semibold text-[#4d1490] hover:underline"
                                         >
                                             View all
@@ -657,18 +799,23 @@ export default function Dashboard({ user, transactions = [] }) {
 
                                                         <div
                                                             className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
-                                                                transaction.type === 'credit'
+                                                                transaction.type ===
+                                                                'credit'
                                                                     ? 'bg-[#e9f9f0] text-[#16834b]'
                                                                     : 'bg-[#f4eafa] text-[#51169a]'
                                                             }`}
                                                         >
-                                                            <Icon type="transfer" size={18} />
+                                                            <Icon
+                                                                type="transfer"
+                                                                size={18}
+                                                            />
                                                         </div>
 
                                                         <div className="min-w-0">
 
                                                             <p className="truncate text-sm font-semibold text-[#211c32]">
-                                                                {transaction.type === 'credit'
+                                                                {transaction.type ===
+                                                                'credit'
                                                                     ? `Received from ${
                                                                           transaction.sender_name ||
                                                                           'Customer'
@@ -689,11 +836,14 @@ export default function Dashboard({ user, transactions = [] }) {
                                                                 {transaction.created_at
                                                                     ? new Date(
                                                                           transaction.created_at
-                                                                      ).toLocaleDateString('en-US', {
-                                                                          month: 'short',
-                                                                          day: 'numeric',
-                                                                          year: 'numeric',
-                                                                      })
+                                                                      ).toLocaleDateString(
+                                                                          'en-US',
+                                                                          {
+                                                                              month: 'short',
+                                                                              day: 'numeric',
+                                                                              year: 'numeric',
+                                                                          }
+                                                                      )
                                                                     : ''}
                                                             </p>
 
@@ -705,22 +855,28 @@ export default function Dashboard({ user, transactions = [] }) {
 
                                                         <p
                                                             className={`text-sm font-bold ${
-                                                                transaction.type === 'credit'
+                                                                transaction.type ===
+                                                                'credit'
                                                                     ? 'text-[#16834b]'
                                                                     : 'text-[#c43d4b]'
                                                             }`}
                                                         >
-                                                            {transaction.type === 'credit'
+                                                            {transaction.type ===
+                                                            'credit'
                                                                 ? '+'
                                                                 : '-'}
-                                                            {formatCurrency(transaction.amount)}
+                                                            {formatCurrency(
+                                                                transaction.amount
+                                                            )}
                                                         </p>
 
                                                         <span
                                                             className={`mt-1 inline-block rounded-full px-2 py-1 text-[10px] font-semibold ${
-                                                                transaction.status === 'completed'
+                                                                transaction.status ===
+                                                                'completed'
                                                                     ? 'bg-[#e9f9f0] text-[#16834b]'
-                                                                    : transaction.status === 'pending'
+                                                                    : transaction.status ===
+                                                                      'pending'
                                                                     ? 'bg-[#fff6df] text-[#a66a00]'
                                                                     : 'bg-[#fdecec] text-[#c43d4b]'
                                                             }`}
@@ -729,7 +885,9 @@ export default function Dashboard({ user, transactions = [] }) {
                                                                 ? transaction.status
                                                                       .charAt(0)
                                                                       .toUpperCase() +
-                                                                  transaction.status.slice(1)
+                                                                  transaction.status.slice(
+                                                                      1
+                                                                  )
                                                                 : 'Completed'}
                                                         </span>
 
@@ -743,7 +901,10 @@ export default function Dashboard({ user, transactions = [] }) {
                                         <div className="flex min-h-[250px] flex-col items-center justify-center text-center">
 
                                             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#f2ebfa] text-[#51169a]">
-                                                <Icon type="document" size={23} />
+                                                <Icon
+                                                    type="document"
+                                                    size={23}
+                                                />
                                             </div>
 
                                             <p className="mt-3 text-sm font-semibold text-[#29243a]">
@@ -751,7 +912,8 @@ export default function Dashboard({ user, transactions = [] }) {
                                             </p>
 
                                             <p className="mt-1 max-w-[250px] text-xs leading-5 text-[#716b7d]">
-                                                Your recent transactions will appear here.
+                                                Your recent transactions will
+                                                appear here.
                                             </p>
 
                                         </div>
@@ -808,7 +970,8 @@ export default function Dashboard({ user, transactions = [] }) {
                                         </p>
 
                                         <p className="mt-1 break-all text-sm font-semibold text-[#211c32]">
-                                            {user?.account_number || 'Not available'}
+                                            {user?.account_number ||
+                                                'Not available'}
                                         </p>
 
                                     </div>
@@ -852,7 +1015,8 @@ export default function Dashboard({ user, transactions = [] }) {
                                         </p>
 
                                         <p className="mt-1 break-all text-sm font-semibold text-[#211c32]">
-                                            {user?.email || 'Not available'}
+                                            {user?.email ||
+                                                'Not available'}
                                         </p>
 
                                     </div>
@@ -958,7 +1122,9 @@ export default function Dashboard({ user, transactions = [] }) {
 
                                 <button
                                     type="button"
-                                    onClick={() => setShowCardRequest(false)}
+                                    onClick={() =>
+                                        setShowCardRequest(false)
+                                    }
                                     className="rounded-lg p-2 text-gray-500 hover:bg-gray-100"
                                 >
                                     <Icon type="close" size={20} />
@@ -967,7 +1133,8 @@ export default function Dashboard({ user, transactions = [] }) {
                             </div>
 
                             <p className="mt-4 text-sm leading-6 text-[#625d73]">
-                                Your card delivery request has been sent to the administrator for processing.
+                                Your card delivery request has been sent to
+                                the administrator for processing.
                             </p>
 
                             <div className="mt-5 rounded-xl border border-[#e5d9f0] bg-[#f7f0fc] p-4">
@@ -985,7 +1152,8 @@ export default function Dashboard({ user, transactions = [] }) {
                                         </p>
 
                                         <p className="mt-1 text-xs leading-5 text-[#665f73]">
-                                            Your request has been successfully submitted.
+                                            Your request has been successfully
+                                            submitted.
                                         </p>
 
                                     </div>
@@ -996,7 +1164,9 @@ export default function Dashboard({ user, transactions = [] }) {
 
                             <button
                                 type="button"
-                                onClick={() => setShowCardRequest(false)}
+                                onClick={() =>
+                                    setShowCardRequest(false)
+                                }
                                 className="mt-6 w-full rounded-lg bg-[#51169a] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#431180]"
                             >
                                 Close

@@ -11,7 +11,7 @@ class CustomerAuth
     public function handle(Request $request, Closure $next): Response
     {
         if (!$request->session()->has('customer_id')) {
-            return redirect()->route('login');
+            return redirect()->route('home');
         }
 
         return $next($request);

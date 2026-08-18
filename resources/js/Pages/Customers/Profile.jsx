@@ -485,7 +485,7 @@ export default function Profile({ user }) {
                                         <p className="mt-1 text-xs leading-5 text-[#665f73]">
                                             Your customer account information
                                             is protected within the Comericafin
-                                            banking simulation.
+                                            banking Security.
                                         </p>
                                     </div>
 

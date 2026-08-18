@@ -5,16 +5,21 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\AdministratorController;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\TransferController;
+
+use App\Http\Controllers\Auth\AuthenticatedSessionController;
+
 use App\Http\Controllers\Customer\DashboardController as CustomerDashboardController;
 use App\Http\Controllers\Customer\ProfileController as CustomerProfileController;
 use App\Http\Controllers\Customer\TransactionController;
 use App\Http\Controllers\Customer\TransferController as CustomerTransferController;
+
 use App\Http\Controllers\ProfileController;
-use Illuminate\Foundation\Application;
-use Illuminate\Support\Facades\Route;
-use Illuminate\Http\Request;
-use Inertia\Inertia;
 use App\Http\Controllers\AccountRequestController;
+
+use Illuminate\Foundation\Application;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
 
 /*
@@ -25,8 +30,8 @@ use App\Http\Controllers\AccountRequestController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
-        'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
+        'canLogin' => true,
+        'canRegister' => false,
         'laravelVersion' => Application::VERSION,
         'phpVersion' => PHP_VERSION,
     ]);
@@ -35,12 +40,38 @@ Route::get('/', function () {
 
 /*
 |--------------------------------------------------------------------------
+| Customer Authentication
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/customer/login', function () {
+    return Inertia::render('Auth/Login', [
+        'canResetPassword' => false,
+        'status' => session('status'),
+    ]);
+})->name('customer.login');
+
+Route::post('/customer/login', [
+    AuthenticatedSessionController::class,
+    'store',
+])->name('customer.authenticate');
+
+Route::post('/customer/logout', [
+    AuthenticatedSessionController::class,
+    'destroyCustomer',
+])->name('customer.logout');
+
+
+/*
+|--------------------------------------------------------------------------
 | Customer Dashboard
 |--------------------------------------------------------------------------
 */
 
-Route::get('/customer/dashboard', [CustomerDashboardController::class, 'index'])
-    ->name('customer.dashboard');
+Route::get('/customer/dashboard', [
+    CustomerDashboardController::class,
+    'index',
+])->name('customer.dashboard');
 
 
 /*
@@ -49,8 +80,10 @@ Route::get('/customer/dashboard', [CustomerDashboardController::class, 'index'])
 |--------------------------------------------------------------------------
 */
 
-Route::get('/customer/transactions', [TransactionController::class, 'index'])
-    ->name('customer.transactions');
+Route::get('/customer/transactions', [
+    TransactionController::class,
+    'index',
+])->name('customer.transactions');
 
 
 /*
@@ -59,8 +92,10 @@ Route::get('/customer/transactions', [TransactionController::class, 'index'])
 |--------------------------------------------------------------------------
 */
 
-Route::get('/customer/profile', [CustomerProfileController::class, 'index'])
-    ->name('customer.profile');
+Route::get('/customer/profile', [
+    CustomerProfileController::class,
+    'index',
+])->name('customer.profile');
 
 
 /*
@@ -69,13 +104,37 @@ Route::get('/customer/profile', [CustomerProfileController::class, 'index'])
 |--------------------------------------------------------------------------
 */
 
-Route::get('/customer/settings', function () {
+Route::get('/customer/settings', function (Request $request) {
+
+    $customerId = $request->session()->get('customer_id');
+
+    if (!$customerId) {
+        return redirect()->route('customer.login');
+    }
+
+    $customer = \App\Models\User::where('id', $customerId)
+        ->where('role', 'customer')
+        ->where('status', 'active')
+        ->first();
+
+    if (!$customer) {
+        $request->session()->forget('customer_id');
+
+        return redirect()->route('customer.login');
+    }
+
     return Inertia::render('Customers/Settings', [
-        'user' => auth()->user(),
+        'user' => [
+            'id' => $customer->id,
+            'name' => $customer->name,
+            'email' => $customer->email,
+            'phone' => $customer->phone,
+            'account_number' => $customer->account_number,
+            'status' => $customer->status,
+        ],
     ]);
-})
-    ->middleware('auth')
-    ->name('customer.settings');
+
+})->name('customer.settings');
 
 
 /*
@@ -90,8 +149,10 @@ Route::get('/customer/create-account', function (Request $request) {
     ]);
 })->name('customer.create-account');
 
-Route::post('/customer/create-account', [AccountRequestController::class, 'store'])
-    ->name('customer.account-request.store');
+Route::post('/customer/create-account', [
+    AccountRequestController::class,
+    'store',
+])->name('customer.account-request.store');
 
 
 /*
@@ -100,32 +161,44 @@ Route::post('/customer/create-account', [AccountRequestController::class, 'store
 |--------------------------------------------------------------------------
 */
 
-Route::get('/customer/transfer', [CustomerTransferController::class, 'create'])
-    ->name('customer.transfer');
+Route::get('/customer/transfer', [
+    CustomerTransferController::class,
+    'create',
+])->name('customer.transfer');
 
-Route::post('/customer/transfer', [CustomerTransferController::class, 'store'])
-    ->name('customer.transfer.store');
+Route::post('/customer/transfer', [
+    CustomerTransferController::class,
+    'store',
+])->name('customer.transfer.store');
 
-Route::get('/customer/transfer/{transfer}/complete', [CustomerTransferController::class, 'complete'])
-    ->name('customer.transfer.complete');
+Route::get('/customer/transfer/{transfer}/complete', [
+    CustomerTransferController::class,
+    'complete',
+])->name('customer.transfer.complete');
 
 
 /*
 |--------------------------------------------------------------------------
-| Profile
+| Standard Laravel Profile
 |--------------------------------------------------------------------------
 */
 
 Route::middleware('auth')->group(function () {
 
-    Route::get('/profile', [ProfileController::class, 'edit'])
-        ->name('profile.edit');
+    Route::get('/profile', [
+        ProfileController::class,
+        'edit',
+    ])->name('profile.edit');
 
-    Route::patch('/profile', [ProfileController::class, 'update'])
-        ->name('profile.update');
+    Route::patch('/profile', [
+        ProfileController::class,
+        'update',
+    ])->name('profile.update');
 
-    Route::delete('/profile', [ProfileController::class, 'destroy'])
-        ->name('profile.destroy');
+    Route::delete('/profile', [
+        ProfileController::class,
+        'destroy',
+    ])->name('profile.destroy');
 
 });
 
@@ -151,8 +224,10 @@ Route::get('/admin/login', function () {
     return Inertia::render('Admin/Login');
 })->name('admin.login');
 
-Route::post('/admin/login', [AuthController::class, 'login'])
-    ->name('admin.authenticate');
+Route::post('/admin/login', [
+    AuthController::class,
+    'login',
+])->name('admin.authenticate');
 
 
 /*
@@ -161,7 +236,10 @@ Route::post('/admin/login', [AuthController::class, 'login'])
 |--------------------------------------------------------------------------
 */
 
-Route::get('/admin/dashboard', [DashboardController::class, 'index'])
+Route::get('/admin/dashboard', [
+    DashboardController::class,
+    'index',
+])
     ->middleware(['auth', 'admin'])
     ->name('admin.dashboard');
 
@@ -172,7 +250,10 @@ Route::get('/admin/dashboard', [DashboardController::class, 'index'])
 |--------------------------------------------------------------------------
 */
 
-Route::post('/admin/logout', [AuthController::class, 'logout'])
+Route::post('/admin/logout', [
+    AuthController::class,
+    'logout',
+])
     ->middleware('auth')
     ->name('admin.logout');
 
@@ -193,40 +274,62 @@ Route::middleware(['auth', 'admin'])
         |--------------------------------------------------------------------------
         */
 
-        Route::get('/customers', [CustomerController::class, 'index'])
-            ->name('admin.customers');
+        Route::get('/customers', [
+            CustomerController::class,
+            'index',
+        ])->name('admin.customers');
 
-        Route::get('/customers/create', function () {
-            return Inertia::render('Customers/Create');
-        })->name('admin.customers.create');
+       Route::get('/customers/create', [
+           CustomerController::class,
+            'create',
+        ])->name('admin.customers.create');
 
-        Route::post('/customers', [CustomerController::class, 'store'])
-            ->name('admin.customers.store');
+        Route::post('/customers', [
+            CustomerController::class,
+            'store',
+        ])->name('admin.customers.store');
 
-        Route::get('/customers/{id}/edit', [CustomerController::class, 'edit'])
-            ->name('admin.customers.edit');
+        Route::get('/customers/{id}/edit', [
+            CustomerController::class,
+            'edit',
+        ])->name('admin.customers.edit');
 
-        Route::put('/customers/{id}', [CustomerController::class, 'update'])
-            ->name('admin.customers.update');
+        Route::post('/customers/{id}/generate-transfer-pin', [
+            CustomerController::class,
+            'generateTransferPin',
+        ])->name('admin.customers.generate-transfer-pin');
 
-        Route::get('/customers/{id}', [CustomerController::class, 'show'])
-            ->name('admin.customers.show');
+        Route::put('/customers/{id}', [
+            CustomerController::class,
+            'update',
+        ])->name('admin.customers.update');
 
-        Route::patch('/customers/{id}/toggle-status', [CustomerController::class, 'toggleStatus'])
-            ->name('admin.customers.toggle-status');
+        Route::get('/customers/{id}', [
+            CustomerController::class,
+            'show',
+        ])->name('admin.customers.show');
 
-        Route::delete('/customers/{id}', [CustomerController::class, 'destroy'])
-            ->name('admin.customers.destroy');
+        Route::patch('/customers/{id}/toggle-status', [
+            CustomerController::class,
+            'toggleStatus',
+        ])->name('admin.customers.toggle-status');
+
+        Route::delete('/customers/{id}', [
+            CustomerController::class,
+            'destroy',
+        ])->name('admin.customers.destroy');
 
 
         /*
         |--------------------------------------------------------------------------
-        | Transactions
+        | Administrator Transactions
         |--------------------------------------------------------------------------
         */
 
-        Route::get('/transactions', [TransferController::class, 'index'])
-            ->name('admin.transactions');
+        Route::get('/transactions', [
+            TransferController::class,
+            'index',
+        ])->name('admin.transactions');
 
 
         /*
@@ -242,7 +345,7 @@ Route::middleware(['auth', 'admin'])
 
         /*
         |--------------------------------------------------------------------------
-        | Settings
+        | Administrator Settings
         |--------------------------------------------------------------------------
         */
 
@@ -272,33 +375,47 @@ Route::middleware(['auth', 'admin', 'superadmin'])
     ->prefix('admin')
     ->group(function () {
 
-        Route::get('/administrators', [AdministratorController::class, 'index'])
-            ->name('admin.administrators');
+        Route::get('/administrators', [
+            AdministratorController::class,
+            'index',
+        ])->name('admin.administrators');
 
-        Route::get('/administrators/create', [AdministratorController::class, 'create'])
-            ->name('admin.administrators.create');
+        Route::get('/administrators/create', [
+            AdministratorController::class,
+            'create',
+        ])->name('admin.administrators.create');
 
-        Route::post('/administrators', [AdministratorController::class, 'store'])
-            ->name('admin.administrators.store');
+        Route::post('/administrators', [
+            AdministratorController::class,
+            'store',
+        ])->name('admin.administrators.store');
 
-        Route::get('/administrators/{id}', [AdministratorController::class, 'show'])
-            ->name('admin.administrators.show');
+        Route::get('/administrators/{id}', [
+            AdministratorController::class,
+            'show',
+        ])->name('admin.administrators.show');
 
-        Route::get('/administrators/{id}/edit', [AdministratorController::class, 'edit'])
-            ->name('admin.administrators.edit');
+        Route::get('/administrators/{id}/edit', [
+            AdministratorController::class,
+            'edit',
+        ])->name('admin.administrators.edit');
 
-        Route::put('/administrators/{id}', [AdministratorController::class, 'update'])
-            ->name('admin.administrators.update');
+        Route::put('/administrators/{id}', [
+            AdministratorController::class,
+            'update',
+        ])->name('admin.administrators.update');
 
-        Route::patch('/administrators/{id}/toggle-status', [AdministratorController::class, 'toggleStatus'])
-            ->name('admin.administrators.toggle-status');
+        Route::patch('/administrators/{id}/toggle-status', [
+            AdministratorController::class,
+            'toggleStatus',
+        ])->name('admin.administrators.toggle-status');
 
     });
 
 
 /*
 |--------------------------------------------------------------------------
-| Authentication Routes
+| Existing Authentication Routes
 |--------------------------------------------------------------------------
 */
 
@@ -311,13 +428,22 @@ require __DIR__ . '/auth.php';
 |--------------------------------------------------------------------------
 */
 
-Route::get('/debug-session', function () {
+Route::get('/debug-session', function (Request $request) {
 
     return response()->json([
-        'session_id' => session()->getId(),
-        'auth_check' => auth()->check(),
-        'user_id' => auth()->id(),
-        'user' => auth()->user(),
+        'session_id' => $request->session()->getId(),
+
+        'customer_session_id' =>
+            $request->session()->get('customer_id'),
+
+        'auth_check' =>
+            auth()->check(),
+
+        'user_id' =>
+            auth()->id(),
+
+        'user' =>
+            auth()->user(),
     ]);
 
 });

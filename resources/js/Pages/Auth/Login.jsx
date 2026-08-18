@@ -16,7 +16,7 @@ export default function Login({ status, canResetPassword }) {
     const submit = (e) => {
         e.preventDefault();
 
-        post(route('login'), {
+        post(route('customer.login'), {
             onFinish: () => reset('password'),
         });
     };
@@ -31,8 +31,8 @@ export default function Login({ status, canResetPassword }) {
                 </div>
             )}
 
-            <div className="text-center mb-8">
-                <div className="inline-flex items-center gap-2 bg-purple-100 text-purple-800 px-4 py-2 rounded-full text-sm font-semibold">
+            <div className="mb-8 text-center">
+                <div className="inline-flex items-center gap-2 rounded-full bg-purple-100 px-4 py-2 text-sm font-semibold text-purple-800">
                     🛡 Customer Login
                 </div>
 
@@ -46,9 +46,11 @@ export default function Login({ status, canResetPassword }) {
             </div>
 
             <form onSubmit={submit}>
-
                 <div>
-                    <InputLabel htmlFor="email" value="📧 Email Address" />
+                    <InputLabel
+                        htmlFor="email"
+                        value="📧 Email Address"
+                    />
 
                     <TextInput
                         id="email"
@@ -58,14 +60,22 @@ export default function Login({ status, canResetPassword }) {
                         className="mt-1 block w-full"
                         autoComplete="username"
                         isFocused={true}
-                        onChange={(e) => setData('email', e.target.value)}
+                        onChange={(e) =>
+                            setData('email', e.target.value)
+                        }
                     />
 
-                    <InputError message={errors.email} className="mt-2" />
+                    <InputError
+                        message={errors.email}
+                        className="mt-2"
+                    />
                 </div>
 
                 <div className="mt-5">
-                    <InputLabel htmlFor="password" value="🔒 Password" />
+                    <InputLabel
+                        htmlFor="password"
+                        value="🔒 Password"
+                    />
 
                     <TextInput
                         id="password"
@@ -74,10 +84,15 @@ export default function Login({ status, canResetPassword }) {
                         value={data.password}
                         className="mt-1 block w-full"
                         autoComplete="current-password"
-                        onChange={(e) => setData('password', e.target.value)}
+                        onChange={(e) =>
+                            setData('password', e.target.value)
+                        }
                     />
 
-                    <InputError message={errors.password} className="mt-2" />
+                    <InputError
+                        message={errors.password}
+                        className="mt-2"
+                    />
                 </div>
 
                 <div className="mt-5 flex items-center justify-between">
@@ -86,7 +101,10 @@ export default function Login({ status, canResetPassword }) {
                             name="remember"
                             checked={data.remember}
                             onChange={(e) =>
-                                setData('remember', e.target.checked)
+                                setData(
+                                    'remember',
+                                    e.target.checked
+                                )
                             }
                         />
 
@@ -111,7 +129,6 @@ export default function Login({ status, canResetPassword }) {
                 >
                     🔒 Secure Sign In
                 </PrimaryButton>
-
             </form>
         </GuestLayout>
     );

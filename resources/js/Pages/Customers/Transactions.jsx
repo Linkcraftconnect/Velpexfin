@@ -105,6 +105,13 @@ const Icon = ({ name, size = 20, strokeWidth = 1.8 }) => {
                 </svg>
             );
 
+        case 'chevron':
+            return (
+                <svg {...common}>
+                    <path d="m9 18 6-6-6-6" />
+                </svg>
+            );
+
         default:
             return null;
     }
@@ -126,38 +133,33 @@ export default function Transactions({
             <Head title="Transactions" />
 
             <div className="min-h-full bg-[#faf9fc] text-[#17152b]">
-                <div className="mx-auto w-full max-w-[1450px] px-4 py-6 sm:px-6 lg:px-8">
+                <div className="mx-auto w-full max-w-[1450px] px-3 py-5 sm:px-6 sm:py-6 lg:px-8">
 
-                    {/* =====================================================
-                        PAGE HEADER
-                    ====================================================== */}
-                    <div className="mb-7">
-                        <div className="flex items-start gap-4">
+                    {/* PAGE HEADER */}
+                    <div className="mb-6">
+                        <div className="flex items-start gap-3 sm:gap-4">
 
-                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#f0e7f8] text-[#51169a] shadow-sm">
-                                <Icon name="transactions" size={23} />
+                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#f0e7f8] text-[#51169a] sm:h-12 sm:w-12 sm:rounded-2xl">
+                                <Icon name="transactions" size={22} />
                             </div>
 
-                            <div>
+                            <div className="min-w-0">
                                 <h1 className="text-2xl font-bold tracking-tight text-[#35106e] sm:text-3xl">
                                     Transactions
                                 </h1>
 
-                                <p className="mt-1 text-sm text-[#625d73]">
+                                <p className="mt-1 text-sm leading-5 text-[#625d73]">
                                     View your Comericafin account transaction history.
                                 </p>
                             </div>
                         </div>
                     </div>
 
-                    {/* =====================================================
-                        SUMMARY CARDS
-                    ====================================================== */}
-
+                    {/* BACK BUTTON */}
                     <div className="mb-5">
                         <Link
                             href={route('customer.dashboard')}
-                            className="mb-5 inline-flex items-center gap-2 text-sm font-semibold text-[#51169a] transition hover:text-[#35106e]"
+                            className="inline-flex items-center gap-2 rounded-lg px-1 py-1 text-sm font-semibold text-[#51169a] transition hover:text-[#35106e]"
                         >
                             <svg
                                 width="17"
@@ -177,14 +179,15 @@ export default function Transactions({
                         </Link>
                     </div>
 
-                    <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+                    {/* SUMMARY CARDS */}
+                    <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
 
-                        {/* Total */}
-                        <div className="rounded-2xl border border-[#e5e1ea] bg-white p-5 shadow-[0_4px_18px_rgba(39,19,70,0.06)]">
-                            <div className="flex items-center justify-between">
+                        {/* TOTAL */}
+                        <div className="rounded-2xl border border-[#e5e1ea] bg-white p-4 shadow-[0_4px_18px_rgba(39,19,70,0.06)] sm:p-5">
+                            <div className="flex items-center justify-between gap-3">
 
                                 <div>
-                                    <p className="text-xs font-semibold uppercase tracking-wide text-[#81798e]">
+                                    <p className="text-[11px] font-semibold uppercase tracking-wide text-[#81798e]">
                                         Total Transactions
                                     </p>
 
@@ -193,19 +196,19 @@ export default function Transactions({
                                     </p>
                                 </div>
 
-                                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#f0e7f8] text-[#51169a]">
-                                    <Icon name="transactions" size={21} />
+                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#f0e7f8] text-[#51169a] sm:h-11 sm:w-11">
+                                    <Icon name="transactions" size={20} />
                                 </div>
 
                             </div>
                         </div>
 
-                        {/* Sent */}
-                        <div className="rounded-2xl border border-[#e5e1ea] bg-white p-5 shadow-[0_4px_18px_rgba(39,19,70,0.06)]">
-                            <div className="flex items-center justify-between">
+                        {/* SENT */}
+                        <div className="rounded-2xl border border-[#e5e1ea] bg-white p-4 shadow-[0_4px_18px_rgba(39,19,70,0.06)] sm:p-5">
+                            <div className="flex items-center justify-between gap-3">
 
                                 <div>
-                                    <p className="text-xs font-semibold uppercase tracking-wide text-[#81798e]">
+                                    <p className="text-[11px] font-semibold uppercase tracking-wide text-[#81798e]">
                                         Sent
                                     </p>
 
@@ -214,19 +217,19 @@ export default function Transactions({
                                     </p>
                                 </div>
 
-                                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#fff0ef] text-[#b42318]">
-                                    <Icon name="arrow-up" size={21} />
+                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#fff0ef] text-[#b42318] sm:h-11 sm:w-11">
+                                    <Icon name="arrow-up" size={20} />
                                 </div>
 
                             </div>
                         </div>
 
-                        {/* Received */}
-                        <div className="rounded-2xl border border-[#e5e1ea] bg-white p-5 shadow-[0_4px_18px_rgba(39,19,70,0.06)]">
-                            <div className="flex items-center justify-between">
+                        {/* RECEIVED */}
+                        <div className="rounded-2xl border border-[#e5e1ea] bg-white p-4 shadow-[0_4px_18px_rgba(39,19,70,0.06)] sm:p-5">
+                            <div className="flex items-center justify-between gap-3">
 
                                 <div>
-                                    <p className="text-xs font-semibold uppercase tracking-wide text-[#81798e]">
+                                    <p className="text-[11px] font-semibold uppercase tracking-wide text-[#81798e]">
                                         Received
                                     </p>
 
@@ -235,8 +238,8 @@ export default function Transactions({
                                     </p>
                                 </div>
 
-                                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#eaf9f0] text-[#16834b]">
-                                    <Icon name="arrow-down" size={21} />
+                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#eaf9f0] text-[#16834b] sm:h-11 sm:w-11">
+                                    <Icon name="arrow-down" size={20} />
                                 </div>
 
                             </div>
@@ -244,13 +247,11 @@ export default function Transactions({
 
                     </div>
 
-                    {/* =====================================================
-                        TRANSACTION TABLE
-                    ====================================================== */}
+                    {/* TRANSACTIONS */}
                     <section className="overflow-hidden rounded-2xl border border-[#e5e1ea] bg-white shadow-[0_5px_24px_rgba(39,19,70,0.07)]">
 
-                        {/* Card header */}
-                        <div className="flex flex-col gap-3 border-b border-[#eeeaf1] px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                        {/* HEADER */}
+                        <div className="flex flex-col gap-3 border-b border-[#eeeaf1] px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-5">
 
                             <div>
                                 <h2 className="text-lg font-bold text-[#35106e]">
@@ -270,159 +271,243 @@ export default function Transactions({
                         </div>
 
                         {transactions.length > 0 ? (
+                            <>
+                                {/* =================================================
+                                    DESKTOP TABLE
+                                ================================================== */}
 
-                            <div className="overflow-x-auto">
+                                <div className="hidden overflow-x-auto md:block">
 
-                                <table className="w-full min-w-[900px]">
+                                    <table className="w-full">
 
-                                    <thead className="bg-[#faf8fc]">
-                                        <tr>
+                                        <thead className="bg-[#faf8fc]">
+                                            <tr>
+                                                <th className="px-6 py-4 text-left text-[11px] font-bold uppercase tracking-[0.08em] text-[#756e80]">
+                                                    Date
+                                                </th>
 
-                                            <th className="px-6 py-4 text-left text-[11px] font-bold uppercase tracking-[0.08em] text-[#756e80]">
-                                                Date
-                                            </th>
+                                                <th className="px-6 py-4 text-left text-[11px] font-bold uppercase tracking-[0.08em] text-[#756e80]">
+                                                    Description
+                                                </th>
 
-                                            <th className="px-6 py-4 text-left text-[11px] font-bold uppercase tracking-[0.08em] text-[#756e80]">
-                                                Description
-                                            </th>
+                                                <th className="px-6 py-4 text-left text-[11px] font-bold uppercase tracking-[0.08em] text-[#756e80]">
+                                                    Reference
+                                                </th>
 
-                                            <th className="px-6 py-4 text-left text-[11px] font-bold uppercase tracking-[0.08em] text-[#756e80]">
-                                                Reference
-                                            </th>
+                                                <th className="px-6 py-4 text-left text-[11px] font-bold uppercase tracking-[0.08em] text-[#756e80]">
+                                                    Type
+                                                </th>
 
-                                            <th className="px-6 py-4 text-left text-[11px] font-bold uppercase tracking-[0.08em] text-[#756e80]">
-                                                Type
-                                            </th>
+                                                <th className="px-6 py-4 text-right text-[11px] font-bold uppercase tracking-[0.08em] text-[#756e80]">
+                                                    Amount
+                                                </th>
 
-                                            <th className="px-6 py-4 text-right text-[11px] font-bold uppercase tracking-[0.08em] text-[#756e80]">
-                                                Amount
-                                            </th>
+                                                <th className="px-6 py-4 text-left text-[11px] font-bold uppercase tracking-[0.08em] text-[#756e80]">
+                                                    Status
+                                                </th>
+                                            </tr>
+                                        </thead>
 
-                                            <th className="px-6 py-4 text-left text-[11px] font-bold uppercase tracking-[0.08em] text-[#756e80]">
-                                                Status
-                                            </th>
+                                        <tbody className="divide-y divide-[#eeeaf1]">
 
-                                        </tr>
-                                    </thead>
+                                            {transactions.map((transaction) => {
 
-                                    <tbody className="divide-y divide-[#eeeaf1]">
+                                                const isOutgoing =
+                                                    Number(transaction.sender_id) ===
+                                                    Number(customerId);
 
-                                        {transactions.map((transaction) => {
+                                                const status =
+                                                    transaction.status || 'pending';
 
-                                            const isOutgoing =
-                                                Number(transaction.sender_id) ===
-                                                Number(customerId);
+                                                const isCompleted =
+                                                    status.toLowerCase() ===
+                                                    'completed';
 
-                                            const status =
-                                                transaction.status || 'pending';
+                                                return (
+                                                    <tr
+                                                        key={transaction.id}
+                                                        className="transition hover:bg-[#fcfaff]"
+                                                    >
 
-                                            const isCompleted =
-                                                status.toLowerCase() ===
-                                                'completed';
+                                                        <td className="whitespace-nowrap px-6 py-5">
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#f7f3fa] text-[#6b6380]">
+                                                                    <Icon
+                                                                        name="calendar"
+                                                                        size={16}
+                                                                    />
+                                                                </div>
 
-                                            return (
-                                                <tr
-                                                    key={transaction.id}
-                                                    className="transition hover:bg-[#fcfaff]"
-                                                >
+                                                                <div>
+                                                                    <p className="text-sm font-semibold text-[#3b3548]">
+                                                                        {formatDate(
+                                                                            transaction.created_at
+                                                                        )}
+                                                                    </p>
 
-                                                    {/* Date */}
-                                                    <td className="whitespace-nowrap px-6 py-5">
+                                                                    <p className="mt-0.5 text-[11px] text-[#898294]">
+                                                                        Transaction date
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                        </td>
 
-                                                        <div className="flex items-center gap-3">
+                                                        <td className="px-6 py-5">
+                                                            <p className="text-sm font-semibold text-[#211c32]">
+                                                                {transaction.description ||
+                                                                    (isOutgoing
+                                                                        ? 'Transfer sent'
+                                                                        : 'Transfer received')}
+                                                            </p>
 
-                                                            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#f7f3fa] text-[#6b6380]">
+                                                            <p className="mt-1 text-xs text-[#756e80]">
+                                                                {isOutgoing
+                                                                    ? `To ${transaction.recipient?.name || 'Customer'}`
+                                                                    : `From ${transaction.sender?.name || 'Customer'}`}
+                                                            </p>
+                                                        </td>
+
+                                                        <td className="px-6 py-5">
+                                                            <span className="rounded-lg bg-[#f8f5fa] px-2.5 py-1.5 font-mono text-xs font-medium text-[#5e576c]">
+                                                                {transaction.reference || 'N/A'}
+                                                            </span>
+                                                        </td>
+
+                                                        <td className="px-6 py-5">
+                                                            <span
+                                                                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold ${
+                                                                    isOutgoing
+                                                                        ? 'bg-[#fff0ef] text-[#b42318]'
+                                                                        : 'bg-[#eaf9f0] text-[#16834b]'
+                                                                }`}
+                                                            >
                                                                 <Icon
-                                                                    name="calendar"
-                                                                    size={16}
+                                                                    name={
+                                                                        isOutgoing
+                                                                            ? 'arrow-up'
+                                                                            : 'arrow-down'
+                                                                    }
+                                                                    size={13}
                                                                 />
-                                                            </div>
 
-                                                            <div>
-                                                                <p className="text-sm font-semibold text-[#3b3548]">
-                                                                    {formatDate(
-                                                                        transaction.created_at
-                                                                    )}
-                                                                </p>
+                                                                {isOutgoing
+                                                                    ? 'Sent'
+                                                                    : 'Received'}
+                                                            </span>
+                                                        </td>
 
-                                                                <p className="mt-0.5 text-[11px] text-[#898294]">
-                                                                    Transaction date
-                                                                </p>
-                                                            </div>
+                                                        <td
+                                                            className={`whitespace-nowrap px-6 py-5 text-right text-sm font-bold ${
+                                                                isOutgoing
+                                                                    ? 'text-[#b42318]'
+                                                                    : 'text-[#16834b]'
+                                                            }`}
+                                                        >
+                                                            {isOutgoing ? '-' : '+'}
+                                                            {formatCurrency(
+                                                                transaction.amount
+                                                            )}
+                                                        </td>
 
-                                                        </div>
+                                                        <td className="px-6 py-5">
+                                                            <span
+                                                                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold ${
+                                                                    isCompleted
+                                                                        ? 'bg-[#eaf9f0] text-[#16834b]'
+                                                                        : 'bg-[#fff8e8] text-[#9a6900]'
+                                                                }`}
+                                                            >
+                                                                {isCompleted ? (
+                                                                    <Icon
+                                                                        name="check"
+                                                                        size={13}
+                                                                    />
+                                                                ) : (
+                                                                    <Icon
+                                                                        name="clock"
+                                                                        size={13}
+                                                                    />
+                                                                )}
 
-                                                    </td>
+                                                                <span className="capitalize">
+                                                                    {status}
+                                                                </span>
+                                                            </span>
+                                                        </td>
 
-                                                    {/* Description */}
-                                                    <td className="px-6 py-5">
+                                                    </tr>
+                                                );
+                                            })}
 
-                                                        <p className="text-sm font-semibold text-[#211c32]">
-                                                            {transaction.description ||
-                                                                (isOutgoing
-                                                                    ? 'Transfer sent'
-                                                                    : 'Transfer received')}
-                                                        </p>
+                                        </tbody>
+                                    </table>
+                                </div>
 
-                                                        <p className="mt-1 text-xs text-[#756e80]">
-                                                            {isOutgoing
-                                                                ? `To ${
-                                                                      transaction
-                                                                          .recipient
-                                                                          ?.name ||
-                                                                      'Customer'
-                                                                  }`
-                                                                : `From ${
-                                                                      transaction
-                                                                          .sender
-                                                                          ?.name ||
-                                                                      'Customer'
-                                                                  }`}
-                                                        </p>
+                                {/* =================================================
+                                    MOBILE CARDS
+                                ================================================== */}
 
-                                                    </td>
+                                <div className="divide-y divide-[#eeeaf1] md:hidden">
 
-                                                    {/* Reference */}
-                                                    <td className="px-6 py-5">
+                                    {transactions.map((transaction) => {
 
-                                                        <span className="rounded-lg bg-[#f8f5fa] px-2.5 py-1.5 font-mono text-xs font-medium text-[#5e576c]">
-                                                            {transaction.reference ||
-                                                                'N/A'}
-                                                        </span>
+                                        const isOutgoing =
+                                            Number(transaction.sender_id) ===
+                                            Number(customerId);
 
-                                                    </td>
+                                        const status =
+                                            transaction.status || 'pending';
 
-                                                    {/* Type */}
-                                                    <td className="px-6 py-5">
+                                        const isCompleted =
+                                            status.toLowerCase() === 'completed';
 
-                                                        <span
-                                                            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold ${
+                                        return (
+                                            <div
+                                                key={transaction.id}
+                                                className="p-4 sm:p-5"
+                                            >
+
+                                                {/* Top row */}
+                                                <div className="flex items-start justify-between gap-3">
+
+                                                    <div className="flex min-w-0 items-center gap-3">
+
+                                                        <div
+                                                            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
                                                                 isOutgoing
                                                                     ? 'bg-[#fff0ef] text-[#b42318]'
                                                                     : 'bg-[#eaf9f0] text-[#16834b]'
                                                             }`}
                                                         >
-
                                                             <Icon
                                                                 name={
                                                                     isOutgoing
                                                                         ? 'arrow-up'
                                                                         : 'arrow-down'
                                                                 }
-                                                                size={13}
+                                                                size={18}
                                                             />
+                                                        </div>
 
-                                                            {isOutgoing
-                                                                ? 'Sent'
-                                                                : 'Received'}
+                                                        <div className="min-w-0">
+                                                            <p className="truncate text-sm font-bold text-[#211c32]">
+                                                                {transaction.description ||
+                                                                    (isOutgoing
+                                                                        ? 'Transfer sent'
+                                                                        : 'Transfer received')}
+                                                            </p>
 
-                                                        </span>
+                                                            <p className="mt-0.5 truncate text-xs text-[#756e80]">
+                                                                {isOutgoing
+                                                                    ? `To ${transaction.recipient?.name || 'Customer'}`
+                                                                    : `From ${transaction.sender?.name || 'Customer'}`}
+                                                            </p>
+                                                        </div>
 
-                                                    </td>
+                                                    </div>
 
-                                                    {/* Amount */}
-                                                    <td
-                                                        className={`whitespace-nowrap px-6 py-5 text-right text-sm font-bold ${
+                                                    <span
+                                                        className={`shrink-0 text-base font-bold ${
                                                             isOutgoing
                                                                 ? 'text-[#b42318]'
                                                                 : 'text-[#16834b]'
@@ -432,55 +517,100 @@ export default function Transactions({
                                                         {formatCurrency(
                                                             transaction.amount
                                                         )}
-                                                    </td>
+                                                    </span>
 
-                                                    {/* Status */}
-                                                    <td className="px-6 py-5">
+                                                </div>
 
-                                                        <span
-                                                            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold ${
-                                                                isCompleted
-                                                                    ? 'bg-[#eaf9f0] text-[#16834b]'
-                                                                    : 'bg-[#fff8e8] text-[#9a6900]'
-                                                            }`}
-                                                        >
+                                                {/* Details */}
+                                                <div className="mt-4 rounded-xl bg-[#faf8fc] p-3.5">
 
-                                                            {isCompleted ? (
-                                                                <Icon
-                                                                    name="check"
-                                                                    size={13}
-                                                                />
-                                                            ) : (
-                                                                <Icon
-                                                                    name="clock"
-                                                                    size={13}
-                                                                />
-                                                            )}
+                                                    <div className="grid grid-cols-2 gap-3">
 
-                                                            <span className="capitalize">
-                                                                {status}
+                                                        <div>
+                                                            <p className="text-[10px] font-bold uppercase tracking-wide text-[#8b8494]">
+                                                                Date
+                                                            </p>
+
+                                                            <p className="mt-1 text-xs font-semibold text-[#3b3548]">
+                                                                {formatDate(
+                                                                    transaction.created_at
+                                                                )}
+                                                            </p>
+                                                        </div>
+
+                                                        <div>
+                                                            <p className="text-[10px] font-bold uppercase tracking-wide text-[#8b8494]">
+                                                                Type
+                                                            </p>
+
+                                                            <p
+                                                                className={`mt-1 text-xs font-bold ${
+                                                                    isOutgoing
+                                                                        ? 'text-[#b42318]'
+                                                                        : 'text-[#16834b]'
+                                                                }`}
+                                                            >
+                                                                {isOutgoing
+                                                                    ? 'Sent'
+                                                                    : 'Received'}
+                                                            </p>
+                                                        </div>
+
+                                                        <div className="col-span-2 min-w-0">
+                                                            <p className="text-[10px] font-bold uppercase tracking-wide text-[#8b8494]">
+                                                                Reference
+                                                            </p>
+
+                                                            <p className="mt-1 break-all font-mono text-[11px] font-medium text-[#5e576c]">
+                                                                {transaction.reference ||
+                                                                    'N/A'}
+                                                            </p>
+                                                        </div>
+
+                                                        <div>
+                                                            <p className="text-[10px] font-bold uppercase tracking-wide text-[#8b8494]">
+                                                                Status
+                                                            </p>
+
+                                                            <span
+                                                                className={`mt-1 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold ${
+                                                                    isCompleted
+                                                                        ? 'bg-[#eaf9f0] text-[#16834b]'
+                                                                        : 'bg-[#fff8e8] text-[#9a6900]'
+                                                                }`}
+                                                            >
+                                                                {isCompleted ? (
+                                                                    <Icon
+                                                                        name="check"
+                                                                        size={11}
+                                                                    />
+                                                                ) : (
+                                                                    <Icon
+                                                                        name="clock"
+                                                                        size={11}
+                                                                    />
+                                                                )}
+
+                                                                <span className="capitalize">
+                                                                    {status}
+                                                                </span>
                                                             </span>
+                                                        </div>
 
-                                                        </span>
+                                                    </div>
 
-                                                    </td>
+                                                </div>
 
-                                                </tr>
-                                            );
-                                        })}
+                                            </div>
+                                        );
+                                    })}
 
-                                    </tbody>
-
-                                </table>
-
-                            </div>
-
+                                </div>
+                            </>
                         ) : (
 
-                            /* =================================================
-                               EMPTY STATE
-                            ================================================== */
-                            <div className="px-6 py-20 text-center">
+                            /* EMPTY STATE */
+                            <div className="px-5 py-16 text-center sm:px-6 sm:py-20">
 
                                 <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#f0e7f8] text-[#51169a]">
                                     <Icon
@@ -499,15 +629,12 @@ export default function Transactions({
                                 </p>
 
                             </div>
-
                         )}
 
                     </section>
 
-                    {/* =====================================================
-                        SECURITY NOTICE
-                    ====================================================== */}
-                    <div className="mt-6 rounded-2xl border border-[#e4d8ef] bg-[#f8f2fc] p-4 sm:p-5">
+                    {/* SECURITY NOTICE */}
+                    <div className="mt-5 rounded-2xl border border-[#e4d8ef] bg-[#f8f2fc] p-4 sm:mt-6 sm:p-5">
 
                         <div className="flex items-start gap-3">
 
@@ -515,7 +642,7 @@ export default function Transactions({
                                 <Icon name="shield" size={17} />
                             </div>
 
-                            <div>
+                            <div className="min-w-0">
                                 <p className="text-sm font-semibold text-[#35106e]">
                                     Transaction history
                                 </p>

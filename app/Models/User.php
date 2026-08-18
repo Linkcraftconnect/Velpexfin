@@ -22,8 +22,19 @@ use Illuminate\Notifications\Notifiable;
     'balance',
     'savings_balance',
     'profile_picture',
+    'transfer_pin',
+    'can_manage_document_access',
+    'statement_access',
+    'statement_pdf_access',
+    'statement_png_access',
+    'receipt_pdf_access',
+    'receipt_png_access',
 ])]
-#[Hidden(['password', 'remember_token'])]
+#[Hidden([
+    'password',
+    'remember_token',
+    'transfer_pin',
+])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
@@ -59,11 +70,17 @@ class User extends Authenticatable
 
     public function sentTransfers()
     {
-        return $this->hasMany(\App\Models\Transfer::class, 'sender_id');
+        return $this->hasMany(
+            \App\Models\Transfer::class,
+            'sender_id'
+        );
     }
 
     public function receivedTransfers()
     {
-        return $this->hasMany(\App\Models\Transfer::class, 'recipient_id');
+        return $this->hasMany(
+            \App\Models\Transfer::class,
+            'recipient_id'
+        );
     }
 }

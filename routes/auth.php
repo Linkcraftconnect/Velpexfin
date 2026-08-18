@@ -5,15 +5,32 @@ use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
-| Customer Authentication Routes
+| Customer Authentication
+|--------------------------------------------------------------------------
+|
+| The customer login form lives directly on the Welcome page.
+| There is no separate /login page.
+|
+*/
+
+/*
+|--------------------------------------------------------------------------
+| Customer Login Submission
 |--------------------------------------------------------------------------
 */
 
-Route::get('login', [AuthenticatedSessionController::class, 'create'])
-    ->name('login');
+Route::post('/customer/login', [
+    AuthenticatedSessionController::class,
+    'store',
+])->name('customer.login');
 
-Route::post('login', [AuthenticatedSessionController::class, 'store'])
-    ->name('login.store');
+/*
+|--------------------------------------------------------------------------
+| Customer Logout
+|--------------------------------------------------------------------------
+*/
 
-Route::post('customer/logout', [AuthenticatedSessionController::class, 'destroyCustomer'])
-    ->name('customer.logout');
+Route::post('/customer/logout', [
+    AuthenticatedSessionController::class,
+    'destroyCustomer',
+])->name('customer.logout');

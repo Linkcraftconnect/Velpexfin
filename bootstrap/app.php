@@ -12,6 +12,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+
         $middleware->web(append: [
             \App\Http\Middleware\HandleInertiaRequests::class,
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
@@ -22,9 +23,21 @@ return Application::configure(basePath: dirname(__DIR__))
             'superadmin' => \App\Http\Middleware\SuperAdminMiddleware::class,
         ]);
 
+        /*
+         * Redirect unauthenticated users to the
+         * customer login page instead of the default
+         * Laravel "login" route.
+         */
+        $middleware->redirectGuestsTo(
+            fn (Request $request) => route('customer.login')
+        );
+
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*'),
         );
-    })->create();
+
+    })
+    ->create();

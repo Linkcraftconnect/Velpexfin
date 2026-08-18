@@ -14,7 +14,7 @@ class ProfileController extends Controller
         $customerId = $request->session()->get('customer_id');
 
         if (!$customerId) {
-            return redirect()->route('login');
+            return redirect()->route('customer.login');
         }
 
         $customer = User::where('id', $customerId)
@@ -24,7 +24,7 @@ class ProfileController extends Controller
         if (!$customer) {
             $request->session()->forget('customer_id');
 
-            return redirect()->route('login');
+            return redirect()->route('customer.login');
         }
 
         return Inertia::render('Customers/Profile', [

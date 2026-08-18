@@ -1,17 +1,65 @@
-import { Head, useForm, router } from '@inertiajs/react';
+import React, { useMemo, useState } from 'react';
+import { Head, Link, useForm } from '@inertiajs/react';
 import CustomerLayout from '@/Layouts/CustomerLayout';
-import banks from '@/data/banks';
-import { useMemo, useState } from 'react';
+
+/*
+|--------------------------------------------------------------------------
+| Currency
+|--------------------------------------------------------------------------
+*/
 
 const formatCurrency = (value) => {
-    const amount = Number(value || 0);
+    const amount = Number(value ?? 0);
+
+    if (!Number.isFinite(amount)) {
+        return '$0.00';
+    }
 
     return new Intl.NumberFormat('en-US', {
         style: 'currency',
         currency: 'USD',
         minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
     }).format(amount);
 };
+
+/*
+|--------------------------------------------------------------------------
+| Bank list
+|--------------------------------------------------------------------------
+| Kept inside this file so Transfer.jsx does not depend on
+| "@/data/bank.jsx".
+|--------------------------------------------------------------------------
+*/
+
+const banks = [
+    'Comericafin',
+    'Bank of America',
+    'Chase Bank',
+    'Wells Fargo Bank',
+    'Citibank',
+    'U.S. Bank',
+    'PNC Bank',
+    'Truist Bank',
+    'Capital One',
+    'TD Bank',
+    'Fifth Third Bank',
+    'BMO Bank',
+    'Citizens Bank',
+    'KeyBank',
+    'Regions Bank',
+    'Huntington National Bank',
+    'M&T Bank',
+    'First Citizens Bank',
+    'Discover Bank',
+    'Ally Bank',
+];
+
+/*
+|--------------------------------------------------------------------------
+| Icons
+|--------------------------------------------------------------------------
+*/
 
 const Icon = ({ type, size = 22, className = '' }) => {
     const common = {
@@ -27,11 +75,26 @@ const Icon = ({ type, size = 22, className = '' }) => {
     };
 
     switch (type) {
-        case 'arrow':
+        case 'transfer':
             return (
                 <svg {...common}>
-                    <path d="M5 12h14" />
-                    <path d="m13 6 6 6-6 6" />
+                    <path d="M7 7h13l-3-3" />
+                    <path d="m20 7-3 3" />
+                    <path d="M17 17H4l3 3" />
+                    <path d="m4 17 3-3" />
+                </svg>
+            );
+
+        case 'bank':
+            return (
+                <svg {...common}>
+                    <path d="m3 10 9-7 9 7" />
+                    <path d="M5 10h14" />
+                    <path d="M6 10v8" />
+                    <path d="M10 10v8" />
+                    <path d="M14 10v8" />
+                    <path d="M18 10v8" />
+                    <path d="M3 21h18" />
                 </svg>
             );
 
@@ -43,46 +106,65 @@ const Icon = ({ type, size = 22, className = '' }) => {
                 </svg>
             );
 
-        case 'bank':
+        case 'account':
             return (
                 <svg {...common}>
-                    <path d="M3 10h18" />
-                    <path d="M5 10v8" />
-                    <path d="M9 10v8" />
-                    <path d="M15 10v8" />
-                    <path d="M19 10v8" />
-                    <path d="M2 18h20" />
-                    <path d="m12 3 9 5H3l9-5Z" />
+                    <rect x="3" y="4" width="18" height="16" rx="2" />
+                    <path d="M7 8h4" />
+                    <path d="M7 12h2" />
+                    <path d="M15 12h2" />
+                    <path d="M15 16h2" />
                 </svg>
             );
 
-        case 'shield':
+        case 'routing':
             return (
                 <svg {...common}>
-                    <path d="M12 3 20 6v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z" />
-                    <path d="m9 12 2 2 4-4" />
-                </svg>
-            );
-
-        case 'check':
-            return (
-                <svg {...common}>
-                    <path d="m5 12 4 4L19 6" />
+                    <circle cx="12" cy="12" r="8" />
+                    <path d="M12 8v8" />
+                    <path d="M8 12h8" />
                 </svg>
             );
 
         case 'lock':
             return (
                 <svg {...common}>
-                    <rect x="5" y="10" width="14" height="10" rx="2" />
+                    <rect x="5" y="10" width="14" height="11" rx="2" />
                     <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+                    <path d="M12 14v3" />
                 </svg>
             );
 
-        case 'chevron':
+        case 'arrow':
             return (
                 <svg {...common}>
-                    <path d="m9 18 6-6-6-6" />
+                    <path d="M5 12h14" />
+                    <path d="m13 6 6 6-6 6" />
+                </svg>
+            );
+
+        case 'back':
+            return (
+                <svg {...common}>
+                    <path d="M19 12H5" />
+                    <path d="m11 18-6-6 6-6" />
+                </svg>
+            );
+
+        case 'alert':
+            return (
+                <svg {...common}>
+                    <path d="M12 3 2.8 20h18.4L12 3Z" />
+                    <path d="M12 9v5" />
+                    <path d="M12 17h.01" />
+                </svg>
+            );
+
+        case 'search':
+            return (
+                <svg {...common}>
+                    <circle cx="11" cy="11" r="7" />
+                    <path d="m20 20-4-4" />
                 </svg>
             );
 
@@ -99,99 +181,23 @@ const Icon = ({ type, size = 22, className = '' }) => {
     }
 };
 
-export default function Transfer({ accounts = [] }) {
-    const [search, setSearch] = useState('');
+/*
+|--------------------------------------------------------------------------
+| Transfer Page
+|--------------------------------------------------------------------------
+*/
 
-    const [pinRequired, setPinRequired] = useState(false);
-    const [transferPin, setTransferPin] = useState('');
-    const [pinError, setPinError] = useState('');
+export default function Transfer({
+    accounts = [],
+    customer = {},
+}) {
+    const [transferType, setTransferType] = useState('internal');
 
-    const [stage, setStage] = useState('form');
-    const [completed, setCompleted] = useState(false);
-    const [reference, setReference] = useState('');
+    const [bankSearch, setBankSearch] = useState('');
+    const [showBankList, setShowBankList] = useState(false);
 
-    const getInitialSourceAccount = () => {
-        if (typeof window === 'undefined') {
-            return 'checking';
-        }
-
-        const source = new URLSearchParams(window.location.search).get(
-            'source'
-        );
-
-        return source === 'savings' ? 'savings' : 'checking';
-    };
-
-    const initialSourceAccount = getInitialSourceAccount();
-
-    const [sourceAccount, setSourceAccount] = useState(
-        initialSourceAccount
-    );
-
-    /*
-    |--------------------------------------------------------------------------
-    | Bank list
-    |--------------------------------------------------------------------------
-    */
-
-    const bankList = useMemo(() => {
-        return [...new Set(['Comericafin', ...banks])];
-    }, []);
-
-    const filteredBanks = useMemo(() => {
-        const keyword = search.trim().toLowerCase();
-
-        if (!keyword) {
-            return bankList;
-        }
-
-        return bankList.filter((bank) =>
-            bank.toLowerCase().includes(keyword)
-        );
-    }, [search, bankList]);
-
-    /*
-    |--------------------------------------------------------------------------
-    | Accounts
-    |--------------------------------------------------------------------------
-    */
-
-    const checkingAccount = useMemo(() => {
-        if (!Array.isArray(accounts)) {
-            return null;
-        }
-
-        return (
-            accounts.find((account) => account.type === 'checking') ||
-            null
-        );
-    }, [accounts]);
-
-    const savingsAccount = useMemo(() => {
-        if (!Array.isArray(accounts)) {
-            return null;
-        }
-
-        return (
-            accounts.find((account) => account.type === 'savings') ||
-            null
-        );
-    }, [accounts]);
-
-    const checkingBalance = Number(
-        checkingAccount?.balance ?? 0
-    );
-
-    const savingsBalance = Number(
-        savingsAccount?.savings_balance ??
-            savingsAccount?.balance ??
-            0
-    );
-
-    const selectedBalance =
-        sourceAccount === 'savings'
-            ? savingsBalance
-            : checkingBalance;
+    const [showPinModal, setShowPinModal] = useState(false);
+    const [showPin, setShowPin] = useState(false);
 
     /*
     |--------------------------------------------------------------------------
@@ -199,765 +205,588 @@ export default function Transfer({ accounts = [] }) {
     |--------------------------------------------------------------------------
     */
 
-    const {
-        data,
-        setData,
-        post,
-        processing,
-        errors,
-    } = useForm({
-        source_account: initialSourceAccount,
+    const form = useForm({
+        source_account: 'checking',
         recipient_name: '',
-        bank_name: '',
+        bank_name: 'Comericafin',
         routing_number: '',
         account_number: '',
         account_type: 'checking',
         amount: '',
         description: '',
+        transfer_pin: '',
     });
 
     /*
     |--------------------------------------------------------------------------
-    | Source account
+    | Selected account
     |--------------------------------------------------------------------------
     */
 
-    const handleSourceAccountChange = (value) => {
-        const nextAccount =
-            value === 'savings' ? 'savings' : 'checking';
+    const selectedAccount = useMemo(() => {
+        return accounts.find(
+            (account) =>
+                account.type === form.data.source_account
+        );
+    }, [accounts, form.data.source_account]);
 
-        setSourceAccount(nextAccount);
-        setData('source_account', nextAccount);
+    const availableBalance = Number(
+        selectedAccount?.balance ?? 0
+    );
+
+    const transferAmount = Number(
+        form.data.amount || 0
+    );
+
+    const hasEnoughBalance =
+        transferAmount > 0 &&
+        transferAmount <= availableBalance;
+
+    /*
+    |--------------------------------------------------------------------------
+    | Bank search
+    |--------------------------------------------------------------------------
+    */
+
+    const filteredBanks = useMemo(() => {
+        const search = bankSearch.trim().toLowerCase();
+
+        if (!search) {
+            return banks;
+        }
+
+        return banks
+            .filter((bank) =>
+                bank.toLowerCase().includes(search)
+            )
+            .slice(0, 50);
+    }, [bankSearch]);
+
+    /*
+    |--------------------------------------------------------------------------
+    | Transfer type
+    |--------------------------------------------------------------------------
+    */
+
+    const selectTransferType = (type) => {
+        setTransferType(type);
+
+        form.clearErrors();
+
+        if (type === 'internal') {
+            form.setData('bank_name', 'Comericafin');
+            setBankSearch('Comericafin');
+        } else {
+            form.setData('bank_name', '');
+            setBankSearch('');
+        }
     };
 
     /*
     |--------------------------------------------------------------------------
-    | Process transfer
+    | Bank selection
     |--------------------------------------------------------------------------
     */
 
-    const processTransfer = () => {
-        setPinRequired(false);
-        setPinError('');
-        setStage('processing');
+    const selectBank = (bank) => {
+        form.setData('bank_name', bank);
+        setBankSearch(bank);
+        setShowBankList(false);
 
-        post(route('customer.transfer.store'), {
-            preserveScroll: true,
-
-            onSuccess: () => {
-                setTimeout(() => {
-                    const generatedReference =
-                        'CF' + Date.now().toString().slice(-10);
-
-                    setReference(generatedReference);
-                    setCompleted(true);
-                    setStage('completed');
-                }, 1500);
-            },
-
-            onError: () => {
-                setStage('form');
-            },
-        });
+        form.clearErrors('bank_name');
     };
 
     /*
     |--------------------------------------------------------------------------
-    | Submit
+    | Local validation
     |--------------------------------------------------------------------------
     */
 
-    const submit = (e) => {
-        e.preventDefault();
+    const continueTransfer = (event) => {
+        event.preventDefault();
 
-        if (data.bank_name === 'Comericafin') {
-            processTransfer();
+        form.clearErrors();
+
+        if (!form.data.recipient_name.trim()) {
+            form.setError(
+                'recipient_name',
+                'Please enter the recipient name.'
+            );
             return;
         }
 
-        setTransferPin('');
-        setPinError('');
-        setPinRequired(true);
+        if (!form.data.bank_name.trim()) {
+            form.setError(
+                'bank_name',
+                'Please select a bank.'
+            );
+            return;
+        }
+
+        if (
+            !form.data.routing_number ||
+            form.data.routing_number.length !== 9
+        ) {
+            form.setError(
+                'routing_number',
+                'Please enter a valid 9-digit routing number.'
+            );
+            return;
+        }
+
+        if (!form.data.account_number.trim()) {
+            form.setError(
+                'account_number',
+                'Please enter the account number.'
+            );
+            return;
+        }
+
+        if (
+            !form.data.amount ||
+            Number(form.data.amount) <= 0
+        ) {
+            form.setError(
+                'amount',
+                'Please enter a valid transfer amount.'
+            );
+            return;
+        }
+
+        if (!hasEnoughBalance) {
+            form.setError(
+                'amount',
+                'The transfer amount exceeds your available balance.'
+            );
+            return;
+        }
+
+        form.setData('transfer_pin', '');
+        form.clearErrors('transfer_pin');
+
+        setShowPinModal(true);
     };
 
     /*
     |--------------------------------------------------------------------------
-    | Confirm PIN
+    | Confirm transfer
     |--------------------------------------------------------------------------
     */
 
-    const confirmPin = () => {
-        if (!/^\d{4}$/.test(transferPin)) {
-            setPinError(
-                'Please enter your 4-digit transfer PIN.'
+    const confirmTransfer = (event) => {
+        event.preventDefault();
+
+        if (
+            !form.data.transfer_pin ||
+            form.data.transfer_pin.length !== 4
+        ) {
+            form.setError(
+                'transfer_pin',
+                'Please enter your 4-digit Transfer PIN.'
             );
 
             return;
         }
 
-        processTransfer();
+        form.post(
+            route('customer.transfer.store'),
+            {
+                preserveScroll: true,
+                preserveState: true,
+
+                onError: (errors) => {
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Important
+                    |--------------------------------------------------------------------------
+                    | If Laravel returns validation errors, keep the PIN
+                    | modal open instead of leaving the transfer page.
+                    |--------------------------------------------------------------------------
+                    */
+
+                    setShowPinModal(true);
+
+                    if (errors?.transfer_pin) {
+                        setShowPin(true);
+                    }
+                },
+
+                onSuccess: () => {
+                    setShowPinModal(false);
+                    setShowPin(false);
+                    form.setData('transfer_pin', '');
+                },
+
+                onFinish: () => {
+                    /*
+                    | Do not redirect from here.
+                    | Laravel/Inertia controls the successful destination.
+                    */
+                },
+            }
+        );
     };
 
     /*
     |--------------------------------------------------------------------------
-    | SUCCESS
+    | Close PIN modal
     |--------------------------------------------------------------------------
     */
 
-    if (completed) {
-        return (
-            <CustomerLayout>
-                <Head title="Transfer Completed" />
-
-                <div className="min-h-screen bg-white px-4 py-8 sm:px-6 lg:px-8">
-
-                    <div className="mx-auto max-w-3xl">
-
-                        <div className="mb-6">
-
-                            <p className="text-sm font-medium text-gray-500">
-                                Transfers
-                            </p>
-
-                            <h1 className="mt-1 text-3xl font-bold tracking-tight text-gray-900">
-                                Transfer completed
-                            </h1>
-
-                        </div>
-
-                        <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-lg">
-
-                            <div className="border-b border-gray-200 px-6 py-7 sm:px-8">
-
-                                <div className="flex items-center gap-4">
-
-                                    <div className="flex h-14 w-14 items-center justify-center rounded-full bg-green-50 text-green-600">
-
-                                        <Icon
-                                            type="check"
-                                            size={28}
-                                        />
-
-                                    </div>
-
-                                    <div>
-
-                                        <h2 className="text-xl font-bold text-gray-900">
-                                            Transfer successful
-                                        </h2>
-
-                                        <p className="mt-1 text-sm text-gray-500">
-                                            Your transfer has been completed.
-                                        </p>
-
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                            <div className="p-6 sm:p-8">
-
-                                <div className="rounded-xl border border-gray-200 bg-gray-50">
-
-                                    <div className="grid grid-cols-1 divide-y divide-gray-200 sm:grid-cols-2 sm:divide-x sm:divide-y-0">
-
-                                        <div className="p-5">
-
-                                            <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                                                From Account
-                                            </p>
-
-                                            <p className="mt-2 text-sm font-semibold capitalize text-gray-900">
-                                                {data.source_account} Account
-                                            </p>
-
-                                        </div>
-
-                                        <div className="p-5">
-
-                                            <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                                                Recipient
-                                            </p>
-
-                                            <p className="mt-2 text-sm font-semibold text-gray-900">
-                                                {data.recipient_name}
-                                            </p>
-
-                                        </div>
-
-                                    </div>
-
-                                    <div className="grid grid-cols-1 border-t border-gray-200 sm:grid-cols-2">
-
-                                        <div className="border-b border-gray-200 p-5 sm:border-b-0 sm:border-r">
-
-                                            <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                                                Destination Account
-                                            </p>
-
-                                            <p className="mt-2 text-sm font-semibold capitalize text-gray-900">
-                                                {data.account_type}
-                                            </p>
-
-                                        </div>
-
-                                        <div className="p-5">
-
-                                            <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                                                Bank
-                                            </p>
-
-                                            <p className="mt-2 text-sm font-semibold text-gray-900">
-                                                {data.bank_name}
-                                            </p>
-
-                                        </div>
-
-                                    </div>
-
-                                    <div className="border-t border-gray-200 p-5">
-
-                                        <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                                            Amount
-                                        </p>
-
-                                        <p className="mt-2 text-3xl font-bold text-[#51169a]">
-                                            {formatCurrency(data.amount)}
-                                        </p>
-
-                                    </div>
-
-                                    <div className="grid grid-cols-1 border-t border-gray-200 sm:grid-cols-2">
-
-                                        <div className="border-b border-gray-200 p-5 sm:border-b-0 sm:border-r">
-
-                                            <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                                                Reference
-                                            </p>
-
-                                            <p className="mt-2 text-sm font-semibold text-gray-900">
-                                                {reference}
-                                            </p>
-
-                                        </div>
-
-                                        <div className="p-5">
-
-                                            <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                                                Status
-                                            </p>
-
-                                            <div className="mt-2 flex items-center gap-2">
-
-                                                <span className="h-2 w-2 rounded-full bg-green-500" />
-
-                                                <span className="text-sm font-semibold text-green-600">
-                                                    Completed
-                                                </span>
-
-                                            </div>
-
-                                        </div>
-
-                                    </div>
-
-                                </div>
-
-                                <button
-                                    type="button"
-                                    onClick={() =>
-                                        router.visit(
-                                            route('customer.dashboard')
-                                        )
-                                    }
-                                    className="mt-7 w-full rounded-lg bg-[#51169a] px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-[#431180]"
-                                >
-                                    Return to Dashboard
-                                </button>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                </div>
-            </CustomerLayout>
-        );
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | PROCESSING
-    |--------------------------------------------------------------------------
-    */
-
-    if (stage === 'processing') {
-        return (
-            <CustomerLayout>
-                <Head title="Processing Transfer" />
-
-                <div className="min-h-screen bg-white px-4 py-10 sm:px-6 lg:px-8">
-
-                    <div className="mx-auto max-w-2xl">
-
-                        <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-lg">
-
-                            <div className="px-6 py-14 text-center sm:px-10">
-
-                                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-purple-50">
-
-                                    <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-purple-100 border-t-[#51169a]" />
-
-                                </div>
-
-                                <h1 className="mt-7 text-2xl font-bold text-gray-900">
-                                    Processing your transfer
-                                </h1>
-
-                                <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-gray-500">
-                                    Please wait while your transfer is being
-                                    processed.
-                                </p>
-
-                                <div className="mx-auto mt-8 max-w-md">
-
-                                    <div className="h-1.5 overflow-hidden rounded-full bg-gray-100">
-
-                                        <div className="h-full w-full animate-pulse rounded-full bg-[#51169a]" />
-
-                                    </div>
-
-                                </div>
-
-                                <p className="mt-4 text-xs font-medium text-gray-500">
-
-                                    Processing transfer from{' '}
-
-                                    <span className="font-semibold capitalize text-[#51169a]">
-                                        {data.source_account}
-                                    </span>
-
-                                    ...
-
-                                </p>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                </div>
-            </CustomerLayout>
-        );
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | TRANSFER FORM
-    |--------------------------------------------------------------------------
-    */
+    const closePinModal = () => {
+        if (form.processing) {
+            return;
+        }
+
+        setShowPinModal(false);
+        setShowPin(false);
+
+        form.setData('transfer_pin', '');
+        form.clearErrors('transfer_pin');
+    };
 
     return (
-        <CustomerLayout>
+        <CustomerLayout user={customer}>
             <Head title="Transfer Money" />
 
-            <div className="min-h-screen bg-white px-4 py-7 sm:px-6 lg:px-8">
+            <div className="min-h-screen bg-[#eeeeee] px-4 py-6 sm:px-6 lg:px-8">
 
-                <div className="mx-auto max-w-6xl">
+                <div className="mx-auto w-full max-w-[1200px]">
 
                     {/* HEADER */}
 
-                    <div className="mb-7">
+                    <div className="mb-6 overflow-hidden rounded-[24px] border border-[#8f671d] bg-gradient-to-br from-[#9b741f] via-[#80601a] to-[#5e4512] p-6 shadow-[0_12px_35px_rgba(80,55,10,0.25)] sm:p-8">
 
-                        <div className="flex items-center gap-2 text-sm text-gray-500">
+                        <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
 
-                            <span>
-                                Move Money
-                            </span>
+                            <div>
+                                <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#f5d98a]">
+                                    Comericafin
+                                </p>
 
-                            <Icon
-                                type="chevron"
-                                size={15}
-                                className="text-gray-400"
-                            />
+                                <h1 className="mt-1 text-2xl font-extrabold text-white sm:text-3xl">
+                                    Transfer Money
+                                </h1>
 
-                            <span className="font-medium text-[#51169a]">
-                                Transfer Money
-                            </span>
+                                <p className="mt-2 text-sm text-[#ead9a8]">
+                                    Transfer funds securely between accounts.
+                                </p>
+                            </div>
 
-                        </div>
-
-                        <div className="mt-4">
-
-                            <h1 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-                                Transfer Money
-                            </h1>
-
-                            <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-500">
-                                Send funds securely to another Comericafin
-                                customer.
-                            </p>
+                            <Link
+                                href={route('customer.dashboard')}
+                                className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/30 bg-white/10 px-4 py-3 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/20"
+                            >
+                                <Icon type="back" size={18} />
+                                Dashboard
+                            </Link>
 
                         </div>
-
                     </div>
 
-                    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
+                    {/* TRANSFER TYPE */}
 
-                        {/* MAIN FORM */}
+                    <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2">
 
-                        <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+                        <button
+                            type="button"
+                            onClick={() =>
+                                selectTransferType('internal')
+                            }
+                            className={`rounded-2xl border p-5 text-left transition ${
+                                transferType === 'internal'
+                                    ? 'border-[#51169a] bg-[#f7f0fc] shadow-md'
+                                    : 'border-[#d8d8d8] bg-white hover:border-[#b9a4ca]'
+                            }`}
+                        >
+                            <div className="flex items-center gap-4">
 
-                            <div className="border-b border-gray-200 px-6 py-5 sm:px-8">
+                                <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#5d17a3] to-[#35106e] text-white">
+                                    <Icon
+                                        type="transfer"
+                                        size={24}
+                                    />
+                                </span>
 
-                                <div className="flex items-center gap-3">
+                                <div>
+                                    <p className="font-bold text-[#35106e]">
+                                        Comericafin Transfer
+                                    </p>
 
-                                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-50 text-[#51169a]">
-
-                                        <Icon
-                                            type="arrow"
-                                            size={20}
-                                        />
-
-                                    </div>
-
-                                    <div>
-
-                                        <h2 className="text-lg font-bold text-gray-900">
-                                            Transfer details
-                                        </h2>
-
-                                        <p className="mt-0.5 text-xs text-gray-500">
-                                            Choose the account and enter the
-                                            recipient information.
-                                        </p>
-
-                                    </div>
-
+                                    <p className="mt-1 text-sm text-[#6b6579]">
+                                        Transfer between Comericafin customer accounts.
+                                    </p>
                                 </div>
 
                             </div>
+                        </button>
 
-                            <form
-                                onSubmit={submit}
-                                className="p-6 sm:p-8"
-                            >
+                        <button
+                            type="button"
+                            onClick={() =>
+                                selectTransferType('external')
+                            }
+                            className={`rounded-2xl border p-5 text-left transition ${
+                                transferType === 'external'
+                                    ? 'border-[#9a751f] bg-[#faf7ef] shadow-md'
+                                    : 'border-[#d8d8d8] bg-white hover:border-[#c9b98e]'
+                            }`}
+                        >
+                            <div className="flex items-center gap-4">
 
-                                {/* SOURCE ACCOUNT */}
-
-                                <div className="mb-8">
-
-                                    <div className="mb-5 flex items-center gap-3">
-
-                                        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#51169a] text-sm font-bold text-white">
-                                            1
-                                        </span>
-
-                                        <div>
-
-                                            <h3 className="text-base font-bold text-gray-900">
-                                                From Account
-                                            </h3>
-
-                                            <p className="text-xs text-gray-500">
-                                                Choose which account to send
-                                                money from.
-                                            </p>
-
-                                        </div>
-
-                                    </div>
-
-                                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-
-                                        {/* CHECKING */}
-
-                                        <button
-                                            type="button"
-                                            onClick={() =>
-                                                handleSourceAccountChange(
-                                                    'checking'
-                                                )
-                                            }
-                                            className={`rounded-xl border p-5 text-left transition ${
-                                                sourceAccount === 'checking'
-                                                    ? 'border-[#51169a] bg-purple-50 ring-2 ring-[#51169a]/10'
-                                                    : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
-                                            }`}
-                                        >
-
-                                            <div className="flex items-center justify-between gap-3">
-
-                                                <div>
-
-                                                    <p className="text-sm font-bold text-gray-900">
-                                                        Checking Account
-                                                    </p>
-
-                                                    <p className="mt-1 text-xs text-gray-500">
-                                                        Available balance
-                                                    </p>
-
-                                                </div>
-
-                                                <span
-                                                    className={`flex h-8 w-8 items-center justify-center rounded-full ${
-                                                        sourceAccount === 'checking'
-                                                            ? 'bg-[#51169a] text-white'
-                                                            : 'bg-gray-100 text-gray-400'
-                                                    }`}
-                                                >
-                                                    <Icon
-                                                        type="check"
-                                                        size={16}
-                                                    />
-                                                </span>
-
-                                            </div>
-
-                                            <p className="mt-4 text-2xl font-bold text-[#51169a]">
-                                                {formatCurrency(
-                                                    checkingBalance
-                                                )}
-                                            </p>
-
-                                        </button>
-
-                                        {/* SAVINGS */}
-
-                                        <button
-                                            type="button"
-                                            onClick={() =>
-                                                handleSourceAccountChange(
-                                                    'savings'
-                                                )
-                                            }
-                                            className={`rounded-xl border p-5 text-left transition ${
-                                                sourceAccount === 'savings'
-                                                    ? 'border-[#f0ae18] bg-amber-50 ring-2 ring-[#f0ae18]/10'
-                                                    : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
-                                            }`}
-                                        >
-
-                                            <div className="flex items-center justify-between gap-3">
-
-                                                <div>
-
-                                                    <p className="text-sm font-bold text-gray-900">
-                                                        Savings Account
-                                                    </p>
-
-                                                    <p className="mt-1 text-xs text-gray-500">
-                                                        Available balance
-                                                    </p>
-
-                                                </div>
-
-                                                <span
-                                                    className={`flex h-8 w-8 items-center justify-center rounded-full ${
-                                                        sourceAccount === 'savings'
-                                                            ? 'bg-[#f0ae18] text-white'
-                                                            : 'bg-gray-100 text-gray-400'
-                                                    }`}
-                                                >
-                                                    <Icon
-                                                        type="check"
-                                                        size={16}
-                                                    />
-                                                </span>
-
-                                            </div>
-
-                                            <p className="mt-4 text-2xl font-bold text-[#51169a]">
-                                                {formatCurrency(
-                                                    savingsBalance
-                                                )}
-                                            </p>
-
-                                        </button>
-
-                                    </div>
-
-                                    {errors.source_account && (
-                                        <p className="mt-2 text-xs text-red-500">
-                                            {errors.source_account}
-                                        </p>
-                                    )}
-
-                                </div>
-
-                                <div className="mb-8 border-t border-gray-200" />
-
-                                {/* RECIPIENT */}
+                                <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#b28a32] to-[#765815] text-white">
+                                    <Icon
+                                        type="bank"
+                                        size={24}
+                                    />
+                                </span>
 
                                 <div>
+                                    <p className="font-bold text-[#765815]">
+                                        Other Bank
+                                    </p>
 
-                                    <div className="mb-5 flex items-center gap-3">
+                                    <p className="mt-1 text-sm text-[#6b6579]">
+                                        Submit a external-bank transfer request.
+                                    </p>
+                                </div>
 
-                                        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#51169a] text-sm font-bold text-white">
-                                            2
-                                        </span>
+                            </div>
+                        </button>
 
-                                        <div>
+                    </div>
 
-                                            <h3 className="text-base font-bold text-gray-900">
-                                                Recipient
-                                            </h3>
+                    {/* MAIN FORM */}
 
-                                            <p className="text-xs text-gray-500">
-                                                Who are you sending money to?
-                                            </p>
+                    <div className="rounded-2xl border border-[#d8d8d8] bg-white shadow-sm">
+
+                        <form onSubmit={continueTransfer}>
+
+                            {/* SOURCE ACCOUNT */}
+
+                            <div className="border-b border-[#eeeaf1] p-6 sm:p-8">
+
+                                <h2 className="text-lg font-bold text-[#42117f]">
+                                    From Account
+                                </h2>
+
+                                <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
+
+                                    {accounts.map((account) => (
+                                        <button
+                                            key={account.type}
+                                            type="button"
+                                            onClick={() =>
+                                                form.setData(
+                                                    'source_account',
+                                                    account.type
+                                                )
+                                            }
+                                            className={`rounded-xl border p-4 text-left transition ${
+                                                form.data.source_account ===
+                                                account.type
+                                                    ? 'border-[#51169a] bg-[#f7f0fc] ring-2 ring-[#51169a]/10'
+                                                    : 'border-[#dedbe2] bg-white hover:border-[#bdb5c7]'
+                                            }`}
+                                        >
+                                            <div className="flex items-center justify-between">
+
+                                                <div>
+                                                    <p className="text-sm font-semibold text-[#3b3448]">
+                                                        {account.label}
+                                                    </p>
+
+                                                    <p className="mt-1 text-xl font-bold text-[#42117f]">
+                                                        {formatCurrency(
+                                                            account.balance
+                                                        )}
+                                                    </p>
+                                                </div>
+
+                                                <span
+                                                    className={`h-5 w-5 rounded-full border-2 ${
+                                                        form.data.source_account ===
+                                                        account.type
+                                                            ? 'border-[#51169a] bg-[#51169a]'
+                                                            : 'border-[#bdb5c7]'
+                                                    }`}
+                                                >
+                                                    {form.data.source_account ===
+                                                        account.type && (
+                                                        <span className="block h-full w-full scale-50 rounded-full bg-white" />
+                                                    )}
+                                                </span>
+
+                                            </div>
+                                        </button>
+                                    ))}
+
+                                </div>
+                            </div>
+
+                            {/* RECIPIENT */}
+
+                            <div className="p-6 sm:p-8">
+
+                                <h2 className="text-lg font-bold text-[#42117f]">
+                                    Recipient Information
+                                </h2>
+
+                                <div className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-2">
+
+                                    {/* RECIPIENT NAME */}
+
+                                    <div>
+                                        <label className="mb-2 block text-sm font-semibold text-[#393344]">
+                                            Recipient Name
+                                        </label>
+
+                                        <div className="relative">
+
+                                            <Icon
+                                                type="user"
+                                                size={19}
+                                                className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8a8293]"
+                                            />
+
+                                            <input
+                                                type="text"
+                                                value={
+                                                    form.data.recipient_name
+                                                }
+                                                onChange={(e) =>
+                                                    form.setData(
+                                                        'recipient_name',
+                                                        e.target.value
+                                                    )
+                                                }
+                                                className="w-full rounded-lg border border-[#d8d3dd] py-3 pl-10 pr-4 text-sm outline-none transition focus:border-[#51169a] focus:ring-2 focus:ring-[#51169a]/10"
+                                                placeholder="Enter recipient name"
+                                            />
 
                                         </div>
+
+                                        {form.errors.recipient_name && (
+                                            <p className="mt-2 text-xs font-medium text-[#c43d4b]">
+                                                {form.errors.recipient_name}
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    {/* BANK */}
+
+                                    <div className="relative">
+
+                                        <label className="mb-2 block text-sm font-semibold text-[#393344]">
+                                            Bank Name
+                                        </label>
+
+                                        <div className="relative">
+
+                                            <Icon
+                                                type="search"
+                                                size={19}
+                                                className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8a8293]"
+                                            />
+
+                                            <input
+                                                type="text"
+                                                value={bankSearch}
+                                                onFocus={() =>
+                                                    setShowBankList(true)
+                                                }
+                                                onChange={(e) => {
+                                                    const value =
+                                                        e.target.value;
+
+                                                    setBankSearch(value);
+                                                    form.setData(
+                                                        'bank_name',
+                                                        value
+                                                    );
+                                                    setShowBankList(true);
+                                                }}
+                                                className="w-full rounded-lg border border-[#d8d3dd] py-3 pl-10 pr-4 text-sm outline-none transition focus:border-[#51169a] focus:ring-2 focus:ring-[#51169a]/10"
+                                                placeholder="Search bank name..."
+                                            />
+
+                                        </div>
+
+                                        {showBankList && (
+                                            <div className="absolute left-0 right-0 z-30 mt-2 max-h-72 overflow-y-auto rounded-xl border border-[#ddd8e3] bg-white shadow-xl">
+
+                                                {filteredBanks.length > 0 ? (
+                                                    filteredBanks.map(
+                                                        (bank) => (
+                                                            <button
+                                                                key={bank}
+                                                                type="button"
+                                                                onClick={() =>
+                                                                    selectBank(
+                                                                        bank
+                                                                    )
+                                                                }
+                                                                className={`flex w-full items-center gap-3 border-b border-[#f0edf2] px-4 py-3 text-left text-sm transition last:border-b-0 hover:bg-[#f7f2fb] ${
+                                                                    form.data.bank_name ===
+                                                                    bank
+                                                                        ? 'bg-[#f5effb] font-semibold text-[#51169a]'
+                                                                        : 'text-[#403947]'
+                                                                }`}
+                                                            >
+                                                                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#eee5f7] text-[#51169a]">
+                                                                    <Icon
+                                                                        type="bank"
+                                                                        size={17}
+                                                                    />
+                                                                </span>
+
+                                                                <span>
+                                                                    {bank}
+                                                                </span>
+                                                            </button>
+                                                        )
+                                                    )
+                                                ) : (
+                                                    <div className="p-5 text-center text-sm text-[#777080]">
+                                                        No banks found.
+                                                    </div>
+                                                )}
+
+                                            </div>
+                                        )}
+
+                                        {form.errors.bank_name && (
+                                            <p className="mt-2 text-xs font-medium text-[#c43d4b]">
+                                                {form.errors.bank_name}
+                                            </p>
+                                        )}
 
                                     </div>
 
-                                    <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                                    {/* ROUTING */}
 
-                                        {/* NAME */}
+                                    <div>
+                                        <label className="mb-2 block text-sm font-semibold text-[#393344]">
+                                            Routing Number
+                                        </label>
 
-                                        <div className="md:col-span-2">
+                                        <div className="relative">
 
-                                            <label className="mb-2 block text-sm font-semibold text-gray-700">
-                                                Recipient full name
-                                            </label>
-
-                                            <div className="relative">
-
-                                                <Icon
-                                                    type="user"
-                                                    size={19}
-                                                    className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-                                                />
-
-                                                <input
-                                                    type="text"
-                                                    value={data.recipient_name}
-                                                    onChange={(e) =>
-                                                        setData(
-                                                            'recipient_name',
-                                                            e.target.value
-                                                        )
-                                                    }
-                                                    placeholder="Enter recipient's full name"
-                                                    className="w-full rounded-lg border border-gray-200 bg-white py-3.5 pl-11 pr-4 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-[#51169a] focus:ring-2 focus:ring-[#51169a]/10"
-                                                    required
-                                                />
-
-                                            </div>
-
-                                            {errors.recipient_name && (
-                                                <p className="mt-1.5 text-xs text-red-500">
-                                                    {errors.recipient_name}
-                                                </p>
-                                            )}
-
-                                        </div>
-
-                                        {/* BANK */}
-
-                                        <div className="md:col-span-2">
-
-                                            <label className="mb-2 block text-sm font-semibold text-gray-700">
-                                                Bank
-                                            </label>
-
-                                            <div className="relative">
-
-                                                <Icon
-                                                    type="bank"
-                                                    size={19}
-                                                    className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-                                                />
-
-                                                <input
-                                                    type="text"
-                                                    value={search}
-                                                    onChange={(e) =>
-                                                        setSearch(
-                                                            e.target.value
-                                                        )
-                                                    }
-                                                    placeholder="Search for a bank"
-                                                    className="w-full rounded-lg border border-gray-200 bg-white py-3.5 pl-11 pr-4 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-[#51169a] focus:ring-2 focus:ring-[#51169a]/10"
-                                                />
-
-                                            </div>
-
-                                            <select
-                                                value={data.bank_name}
-                                                onChange={(e) => {
-                                                    setData(
-                                                        'bank_name',
-                                                        e.target.value
-                                                    );
-
-                                                    setPinRequired(false);
-                                                    setPinError('');
-                                                }}
-                                                className="mt-2 w-full rounded-lg border border-gray-200 bg-white px-4 py-3.5 text-sm text-gray-900 outline-none focus:border-[#51169a] focus:ring-2 focus:ring-[#51169a]/10"
-                                                required
-                                            >
-
-                                                <option value="">
-                                                    Select bank
-                                                </option>
-
-                                                {filteredBanks.map(
-                                                    (bank, index) => (
-                                                        <option
-                                                            key={`${bank}-${index}`}
-                                                            value={bank}
-                                                        >
-                                                            {bank}
-                                                        </option>
-                                                    )
-                                                )}
-
-                                            </select>
-
-                                            {data.bank_name === 'Comericafin' && (
-                                                <div className="mt-3 flex items-center gap-2 rounded-lg bg-purple-50 px-4 py-3">
-
-                                                    <Icon
-                                                        type="check"
-                                                        size={17}
-                                                        className="text-[#51169a]"
-                                                    />
-
-                                                    <p className="text-xs font-medium text-[#51169a]">
-                                                        Comericafin selected
-                                                    </p>
-
-                                                </div>
-                                            )}
-
-                                            {errors.bank_name && (
-                                                <p className="mt-1.5 text-xs text-red-500">
-                                                    {errors.bank_name}
-                                                </p>
-                                            )}
-
-                                        </div>
-
-                                        {/* ROUTING */}
-
-                                        <div>
-
-                                            <label className="mb-2 block text-sm font-semibold text-gray-700">
-                                                Routing number
-                                            </label>
+                                            <Icon
+                                                type="routing"
+                                                size={19}
+                                                className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8a8293]"
+                                            />
 
                                             <input
                                                 type="text"
                                                 inputMode="numeric"
-                                                maxLength="9"
-                                                value={data.routing_number}
+                                                maxLength={9}
+                                                value={
+                                                    form.data.routing_number
+                                                }
                                                 onChange={(e) =>
-                                                    setData(
+                                                    form.setData(
                                                         'routing_number',
                                                         e.target.value.replace(
                                                             /\D/g,
@@ -965,126 +794,95 @@ export default function Transfer({ accounts = [] }) {
                                                         )
                                                     )
                                                 }
-                                                placeholder="9-digit number"
-                                                className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3.5 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-[#51169a] focus:ring-2 focus:ring-[#51169a]/10"
-                                                required
+                                                className="w-full rounded-lg border border-[#d8d3dd] py-3 pl-10 pr-4 text-sm outline-none transition focus:border-[#51169a] focus:ring-2 focus:ring-[#51169a]/10"
+                                                placeholder="9-digit routing number"
                                             />
 
-                                            {errors.routing_number && (
-                                                <p className="mt-1.5 text-xs text-red-500">
-                                                    {errors.routing_number}
-                                                </p>
-                                            )}
-
                                         </div>
 
-                                        {/* ACCOUNT NUMBER */}
-
-                                        <div>
-
-                                            <label className="mb-2 block text-sm font-semibold text-gray-700">
-                                                Account number
-                                            </label>
-
-                                            <input
-                                                type="text"
-                                                value={data.account_number}
-                                                onChange={(e) =>
-                                                    setData(
-                                                        'account_number',
-                                                        e.target.value
-                                                    )
-                                                }
-                                                placeholder="Account number"
-                                                className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3.5 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-[#51169a] focus:ring-2 focus:ring-[#51169a]/10"
-                                                required
-                                            />
-
-                                            {errors.account_number && (
-                                                <p className="mt-1.5 text-xs text-red-500">
-                                                    {errors.account_number}
-                                                </p>
-                                            )}
-
-                                        </div>
-
-                                        {/* ACCOUNT TYPE */}
-
-                                        <div className="md:col-span-2">
-
-                                            <label className="mb-2 block text-sm font-semibold text-gray-700">
-                                                Recipient account type
-                                            </label>
-
-                                            <select
-                                                value={data.account_type}
-                                                onChange={(e) =>
-                                                    setData(
-                                                        'account_type',
-                                                        e.target.value
-                                                    )
-                                                }
-                                                className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3.5 text-sm text-gray-900 outline-none focus:border-[#51169a] focus:ring-2 focus:ring-[#51169a]/10"
-                                                required
-                                            >
-
-                                                <option value="checking">
-                                                    Checking
-                                                </option>
-
-                                                <option value="savings">
-                                                    Savings
-                                                </option>
-
-                                            </select>
-
-                                            <p className="mt-2 text-xs text-gray-500">
-                                                Choose which account of the
-                                                recipient should receive the
-                                                funds.
+                                        {form.errors.routing_number && (
+                                            <p className="mt-2 text-xs font-medium text-[#c43d4b]">
+                                                {form.errors.routing_number}
                                             </p>
-
-                                        </div>
-
+                                        )}
                                     </div>
 
-                                </div>
+                                    {/* ACCOUNT NUMBER */}
 
-                                <div className="my-8 border-t border-gray-200" />
-
-                                {/* AMOUNT */}
-
-                                <div>
-
-                                    <div className="mb-5 flex items-center gap-3">
-
-                                        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#51169a] text-sm font-bold text-white">
-                                            3
-                                        </span>
-
-                                        <div>
-
-                                            <h3 className="text-base font-bold text-gray-900">
-                                                Amount
-                                            </h3>
-
-                                            <p className="text-xs text-gray-500">
-                                                How much would you like to send?
-                                            </p>
-
-                                        </div>
-
-                                    </div>
-
-                                    <div className="rounded-xl border border-gray-200 bg-gray-50 p-5">
-
-                                        <label className="mb-3 block text-xs font-semibold uppercase tracking-wide text-gray-500">
-                                            Transfer amount
+                                    <div>
+                                        <label className="mb-2 block text-sm font-semibold text-[#393344]">
+                                            Account Number
                                         </label>
 
                                         <div className="relative">
 
-                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-semibold text-gray-400">
+                                            <Icon
+                                                type="account"
+                                                size={19}
+                                                className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8a8293]"
+                                            />
+
+                                            <input
+                                                type="text"
+                                                value={
+                                                    form.data.account_number
+                                                }
+                                                onChange={(e) =>
+                                                    form.setData(
+                                                        'account_number',
+                                                        e.target.value
+                                                    )
+                                                }
+                                                className="w-full rounded-lg border border-[#d8d3dd] py-3 pl-10 pr-4 text-sm outline-none transition focus:border-[#51169a] focus:ring-2 focus:ring-[#51169a]/10"
+                                                placeholder="Enter account number"
+                                            />
+
+                                        </div>
+
+                                        {form.errors.account_number && (
+                                            <p className="mt-2 text-xs font-medium text-[#c43d4b]">
+                                                {form.errors.account_number}
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    {/* ACCOUNT TYPE */}
+
+                                    <div>
+                                        <label className="mb-2 block text-sm font-semibold text-[#393344]">
+                                            Recipient Account Type
+                                        </label>
+
+                                        <select
+                                            value={form.data.account_type}
+                                            onChange={(e) =>
+                                                form.setData(
+                                                    'account_type',
+                                                    e.target.value
+                                                )
+                                            }
+                                            className="w-full rounded-lg border border-[#d8d3dd] bg-white px-4 py-3 text-sm outline-none focus:border-[#51169a] focus:ring-2 focus:ring-[#51169a]/10"
+                                        >
+                                            <option value="checking">
+                                                Checking
+                                            </option>
+
+                                            <option value="savings">
+                                                Savings
+                                            </option>
+                                        </select>
+                                    </div>
+
+                                    {/* AMOUNT */}
+
+                                    <div>
+                                        <label className="mb-2 block text-sm font-semibold text-[#393344]">
+                                            Transfer Amount
+                                        </label>
+
+                                        <div className="relative">
+
+                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-[#6d6575]">
                                                 $
                                             </span>
 
@@ -1092,628 +890,363 @@ export default function Transfer({ accounts = [] }) {
                                                 type="number"
                                                 min="0.01"
                                                 step="0.01"
-                                                value={data.amount}
+                                                value={form.data.amount}
                                                 onChange={(e) =>
-                                                    setData(
+                                                    form.setData(
                                                         'amount',
                                                         e.target.value
                                                     )
                                                 }
+                                                className="w-full rounded-lg border border-[#d8d3dd] py-3 pl-8 pr-4 text-sm outline-none focus:border-[#51169a] focus:ring-2 focus:ring-[#51169a]/10"
                                                 placeholder="0.00"
-                                                className="w-full rounded-lg border border-gray-200 bg-white py-4 pl-10 pr-4 text-2xl font-bold text-[#51169a] outline-none focus:border-[#51169a] focus:ring-2 focus:ring-[#51169a]/10"
-                                                required
                                             />
 
                                         </div>
 
-                                        {data.amount && (
-                                            <p className="mt-3 text-xs text-gray-500">
-
-                                                You are sending{' '}
-
-                                                <span className="font-semibold text-[#51169a]">
-                                                    {formatCurrency(
-                                                        data.amount
-                                                    )}
-                                                </span>{' '}
-
-                                                from your{' '}
-
-                                                <span className="font-semibold capitalize text-[#51169a]">
-                                                    {data.source_account}
-                                                </span>{' '}
-
-                                                account.
-
-                                            </p>
-                                        )}
-
-                                        <p className="mt-2 text-xs text-gray-500">
-
-                                            Available in selected account:{' '}
-
-                                            <span className="font-semibold text-[#51169a]">
+                                        <p className="mt-2 text-xs text-[#777080]">
+                                            Available:{' '}
+                                            <span className="font-semibold">
                                                 {formatCurrency(
-                                                    selectedBalance
+                                                    availableBalance
                                                 )}
                                             </span>
-
                                         </p>
 
-                                        {errors.amount && (
-                                            <p className="mt-1.5 text-xs text-red-500">
-                                                {errors.amount}
+                                        {form.errors.amount && (
+                                            <p className="mt-2 text-xs font-medium text-[#c43d4b]">
+                                                {form.errors.amount}
                                             </p>
                                         )}
-
                                     </div>
 
                                 </div>
 
                                 {/* DESCRIPTION */}
 
-                                <div className="mt-6">
+                                <div className="mt-5">
 
-                                    <label className="mb-2 block text-sm font-semibold text-gray-700">
-
+                                    <label className="mb-2 block text-sm font-semibold text-[#393344]">
                                         Description
-
-                                        <span className="ml-1 font-normal text-gray-400">
-                                            (optional)
-                                        </span>
-
                                     </label>
 
                                     <textarea
-                                        rows="3"
-                                        value={data.description}
+                                        rows={3}
+                                        value={form.data.description}
                                         onChange={(e) =>
-                                            setData(
+                                            form.setData(
                                                 'description',
                                                 e.target.value
                                             )
                                         }
-                                        placeholder="Add a note for this transfer"
-                                        className="w-full resize-none rounded-lg border border-gray-200 bg-white px-4 py-3.5 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-[#51169a] focus:ring-2 focus:ring-[#51169a]/10"
+                                        className="w-full rounded-lg border border-[#d8d3dd] px-4 py-3 text-sm outline-none transition focus:border-[#51169a] focus:ring-2 focus:ring-[#51169a]/10"
+                                        placeholder="Optional transfer description"
                                     />
 
-                                    {errors.description && (
-                                        <p className="mt-1.5 text-xs text-red-500">
-                                            {errors.description}
-                                        </p>
-                                    )}
+                                </div>
+
+                                {/* NOTICE */}
+
+                                <div className="mt-6 flex items-start gap-3 rounded-xl border border-[#ddd9e1] bg-[#f8f7f9] p-4">
+
+                                    <Icon
+                                        type="alert"
+                                        size={19}
+                                        className="mt-0.5 shrink-0 text-[#6b6579]"
+                                    />
+
+                                    <p className="text-xs leading-5 text-[#6b6579]">
+                                        A 4-digit Transfer PIN will be required
+                                        before any transfer can be completed.
+                                    </p>
 
                                 </div>
 
-                                {/* SECURITY */}
+                                {/* ACTIONS */}
 
-                                <div className="mt-7 flex gap-3 rounded-lg border border-purple-100 bg-purple-50 p-4">
+                                <div className="mt-7 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
 
-                                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-[#51169a]">
+                                    <Link
+                                        href={route('customer.dashboard')}
+                                        className="inline-flex items-center justify-center rounded-lg border border-[#d3ced8] bg-white px-6 py-3 text-sm font-semibold text-[#5e5768] transition hover:bg-[#f7f5f8]"
+                                    >
+                                        Cancel
+                                    </Link>
 
-                                        <Icon
-                                            type="shield"
-                                            size={18}
-                                        />
+                                    <button
+                                        type="submit"
+                                        disabled={
+                                            form.processing ||
+                                            !hasEnoughBalance ||
+                                            transferAmount <= 0
+                                        }
+                                        className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[#51169a] to-[#35106e] px-7 py-3 text-sm font-semibold text-white shadow-md transition hover:from-[#431180] hover:to-[#2c095d] disabled:cursor-not-allowed disabled:opacity-50"
+                                    >
+                                        Continue Transfer
 
-                                    </div>
-
-                                    <div>
-
-                                        <p className="text-sm font-semibold text-gray-900">
-                                            Secure transfer
-                                        </p>
-
-                                        <p className="mt-1 text-xs leading-5 text-gray-500">
-                                            Review the recipient information
-                                            carefully before submitting your
-                                            transfer.
-                                        </p>
-
-                                    </div>
-
-                                </div>
-
-                                {/* SUBMIT */}
-
-                                <button
-                                    type="submit"
-                                    disabled={processing}
-                                    className="mt-7 flex w-full items-center justify-center gap-3 rounded-lg bg-[#51169a] px-6 py-4 text-sm font-bold text-white shadow-sm transition hover:bg-[#431180] disabled:cursor-not-allowed disabled:opacity-60"
-                                >
-
-                                    {processing
-                                        ? 'Processing...'
-                                        : 'Review Transfer'}
-
-                                    {!processing && (
                                         <Icon
                                             type="arrow"
-                                            size={18}
+                                            size={17}
                                         />
-                                    )}
-
-                                </button>
-
-                            </form>
-
-                        </div>
-
-                        {/* RIGHT SIDEBAR */}
-
-                        <aside className="space-y-5">
-
-                            {/* SELECTED ACCOUNT */}
-
-                            <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-
-                                <h2 className="text-base font-bold text-gray-900">
-                                    Sending From
-                                </h2>
-
-                                <div className="mt-5 rounded-xl bg-gray-50 p-4">
-
-                                    <p className="text-xs uppercase tracking-wide text-gray-500">
-                                        Account
-                                    </p>
-
-                                    <p className="mt-1 text-base font-bold capitalize text-[#51169a]">
-                                        {data.source_account} Account
-                                    </p>
-
-                                    <p className="mt-3 text-xs text-gray-500">
-                                        Available Balance
-                                    </p>
-
-                                    <p className="mt-1 text-2xl font-bold text-[#51169a]">
-                                        {formatCurrency(selectedBalance)}
-                                    </p>
+                                    </button>
 
                                 </div>
 
                             </div>
+                        </form>
+                    </div>
 
-                            {/* SUMMARY */}
+                    {/* SECURITY */}
 
-                            <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+                    <div className="mt-6 rounded-2xl border border-[#d5d5d5] bg-[#e4e4e4] p-5">
 
-                                <h2 className="text-base font-bold text-gray-900">
-                                    Transfer summary
-                                </h2>
+                        <div className="flex items-start gap-3">
 
-                                <div className="mt-5 space-y-4">
+                            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#5a1b99] to-[#35106e] text-white">
+                                <Icon type="lock" size={17} />
+                            </span>
 
-                                    <div className="flex items-center justify-between gap-4">
-
-                                        <span className="text-xs text-gray-500">
-                                            From
-                                        </span>
-
-                                        <span className="text-right text-xs font-semibold capitalize text-gray-800">
-                                            {data.source_account}
-                                        </span>
-
-                                    </div>
-
-                                    <div className="flex items-center justify-between gap-4">
-
-                                        <span className="text-xs text-gray-500">
-                                            Recipient
-                                        </span>
-
-                                        <span className="max-w-[150px] truncate text-right text-xs font-semibold text-gray-800">
-                                            {data.recipient_name || '—'}
-                                        </span>
-
-                                    </div>
-
-                                    <div className="flex items-center justify-between gap-4">
-
-                                        <span className="text-xs text-gray-500">
-                                            Destination
-                                        </span>
-
-                                        <span className="text-right text-xs font-semibold capitalize text-gray-800">
-                                            {data.account_type}
-                                        </span>
-
-                                    </div>
-
-                                    <div className="flex items-center justify-between gap-4">
-
-                                        <span className="text-xs text-gray-500">
-                                            Bank
-                                        </span>
-
-                                        <span className="max-w-[150px] truncate text-right text-xs font-semibold text-gray-800">
-                                            {data.bank_name || '—'}
-                                        </span>
-
-                                    </div>
-
-                                    <div className="border-t border-gray-200" />
-
-                                    <div className="flex items-end justify-between gap-4">
-
-                                        <span className="text-xs text-gray-500">
-                                            Amount
-                                        </span>
-
-                                        <span className="text-xl font-bold text-[#51169a]">
-                                            {data.amount
-                                                ? formatCurrency(
-                                                      data.amount
-                                                  )
-                                                : '$0.00'}
-                                        </span>
-
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                            {/* HELP */}
-
-                            <div className="rounded-xl border border-gray-200 bg-white p-5">
-
-                                <div className="flex items-center gap-3">
-
-                                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-purple-50 text-[#51169a]">
-
-                                        <Icon
-                                            type="lock"
-                                            size={18}
-                                        />
-
-                                    </div>
-
-                                    <h3 className="text-sm font-bold text-gray-900">
-                                        Stay secure
-                                    </h3>
-
-                                </div>
-
-                                <p className="mt-3 text-xs leading-5 text-gray-500">
-                                    Never share your password, PIN, or other
-                                    account credentials with anyone.
+                            <div>
+                                <p className="text-sm font-semibold text-[#35106e]">
+                                    Secure Transfer
                                 </p>
 
+                                <p className="mt-1 text-xs leading-5 text-[#655d72]">
+                                    Your Transfer PIN is verified securely
+                                    before a transfer is completed.
+                                </p>
                             </div>
 
-                            {/* STEPS */}
-
-                            <div className="rounded-xl border border-gray-200 bg-white p-5">
-
-                                <h3 className="text-sm font-bold text-gray-900">
-                                    Transfer process
-                                </h3>
-
-                                <div className="mt-5 space-y-5">
-
-                                    <div className="flex gap-3">
-
-                                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#51169a] text-xs font-bold text-white">
-                                            1
-                                        </div>
-
-                                        <div>
-
-                                            <p className="text-xs font-semibold text-gray-800">
-                                                Choose account
-                                            </p>
-
-                                            <p className="mt-1 text-[11px] leading-4 text-gray-500">
-                                                Select Checking or Savings as
-                                                the source account.
-                                            </p>
-
-                                        </div>
-
-                                    </div>
-
-                                    <div className="flex gap-3">
-
-                                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#51169a] text-xs font-bold text-white">
-                                            2
-                                        </div>
-
-                                        <div>
-
-                                            <p className="text-xs font-semibold text-gray-800">
-                                                Enter recipient
-                                            </p>
-
-                                            <p className="mt-1 text-[11px] leading-4 text-gray-500">
-                                                Provide the recipient's account
-                                                information.
-                                            </p>
-
-                                        </div>
-
-                                    </div>
-
-                                    <div className="flex gap-3">
-
-                                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#51169a] text-xs font-bold text-white">
-                                            3
-                                        </div>
-
-                                        <div>
-
-                                            <p className="text-xs font-semibold text-gray-800">
-                                                Enter amount
-                                            </p>
-
-                                            <p className="mt-1 text-[11px] leading-4 text-gray-500">
-                                                Choose the amount you want to
-                                                send.
-                                            </p>
-
-                                        </div>
-
-                                    </div>
-
-                                    <div className="flex gap-3">
-
-                                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#51169a] text-xs font-bold text-white">
-                                            4
-                                        </div>
-
-                                        <div>
-
-                                            <p className="text-xs font-semibold text-gray-800">
-                                                Review and submit
-                                            </p>
-
-                                            <p className="mt-1 text-[11px] leading-4 text-gray-500">
-                                                Check the details before
-                                                completing the transfer.
-                                            </p>
-
-                                        </div>
-
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                        </aside>
-
+                        </div>
                     </div>
 
                 </div>
-
             </div>
 
-            {/* =========================================================
-                4-DIGIT PIN OVERLAY
-            ========================================================= */}
+            {/* ================================================================= */}
+            {/* PIN MODAL */}
+            {/* ================================================================= */}
 
-            {pinRequired && (
-                <div
-                    className="fixed inset-0 z-[100] flex items-center justify-center bg-gray-900/50 px-4 backdrop-blur-sm"
-                    onMouseDown={(e) => {
-                        if (e.target === e.currentTarget) {
-                            setPinRequired(false);
-                            setTransferPin('');
-                            setPinError('');
-                        }
-                    }}
-                >
+            {showPinModal && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 px-4 backdrop-blur-sm">
 
-                    <div className="w-full max-w-md overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl">
+                    <div
+                        className="absolute inset-0"
+                        onClick={closePinModal}
+                    />
+
+                    <div className="relative w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-2xl">
 
                         {/* HEADER */}
 
-                        <div className="border-b border-gray-200 px-6 py-5">
+                        <div className="bg-gradient-to-br from-[#51169a] to-[#35106e] px-6 py-7 text-white">
 
                             <div className="flex items-center justify-between">
 
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-4">
 
-                                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-purple-50 text-[#51169a]">
-
+                                    <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white/15">
                                         <Icon
                                             type="lock"
-                                            size={21}
+                                            size={24}
                                         />
-
-                                    </div>
+                                    </span>
 
                                     <div>
-
-                                        <h2 className="text-lg font-bold text-gray-900">
-                                            Confirm Transfer
+                                        <h2 className="text-xl font-bold">
+                                            Transfer PIN
                                         </h2>
 
-                                        <p className="mt-0.5 text-xs text-gray-500">
-                                            Security verification required
+                                        <p className="mt-1 text-sm text-purple-100">
+                                            Security verification
                                         </p>
-
                                     </div>
 
                                 </div>
 
                                 <button
                                     type="button"
-                                    onClick={() => {
-                                        setPinRequired(false);
-                                        setTransferPin('');
-                                        setPinError('');
-                                    }}
-                                    className="flex h-9 w-9 items-center justify-center rounded-lg text-gray-400 transition hover:bg-gray-100 hover:text-gray-700"
+                                    onClick={closePinModal}
+                                    disabled={form.processing}
+                                    className="rounded-full p-2 text-white/80 transition hover:bg-white/10 hover:text-white disabled:opacity-50"
                                 >
-
                                     <Icon
                                         type="close"
-                                        size={19}
+                                        size={20}
                                     />
-
                                 </button>
 
                             </div>
-
                         </div>
 
-                        {/* BODY */}
+                        {/* CONTENT */}
 
-                        <div className="px-6 py-7">
+                        <div className="p-6">
 
-                            {/* TRANSFER INFORMATION */}
+                            <div className="rounded-2xl border border-[#e4d9ee] bg-[#faf7fd] p-5">
 
-                            <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-
-                                <div className="flex items-center justify-between gap-4">
-
-                                    <div>
-
-                                        <p className="text-xs text-gray-500">
-                                            Transfer amount
-                                        </p>
-
-                                        <p className="mt-1 text-xl font-bold text-[#51169a]">
-                                            {formatCurrency(data.amount)}
-                                        </p>
-
-                                    </div>
-
-                                    <div className="text-right">
-
-                                        <p className="text-xs text-gray-500">
-                                            To
-                                        </p>
-
-                                        <p className="mt-1 max-w-[150px] truncate text-sm font-semibold text-gray-800">
-                                            {data.recipient_name ||
-                                                'Recipient'}
-                                        </p>
-
-                                    </div>
-
-                                </div>
-
-                                <div className="mt-3 border-t border-gray-200 pt-3">
-
-                                    <p className="text-xs text-gray-500">
-                                        Destination bank
-                                    </p>
-
-                                    <p className="mt-1 text-sm font-semibold text-gray-800">
-                                        {data.bank_name}
-                                    </p>
-
-                                </div>
-
-                            </div>
-
-                            <div className="mt-6 text-center">
-
-                                <h3 className="text-base font-semibold text-gray-900">
-                                    Enter your 4-digit PIN
-                                </h3>
-
-                                <p className="mt-2 text-sm leading-5 text-gray-500">
-                                    Enter your transfer PIN to authorize this
-                                    transaction.
+                                <p className="text-sm leading-6 text-[#5d5368]">
+                                    Enter your 4-digit Transfer PIN to
+                                    authorize this transfer.
                                 </p>
 
-                            </div>
+                                {/* SUMMARY */}
 
-                            {/* PIN */}
+                                <div className="mt-5 rounded-xl border border-[#e0d6e8] bg-white p-4">
 
-                            <div className="mt-6">
+                                    <div className="flex items-center justify-between">
 
-                                <input
-                                    type="password"
-                                    inputMode="numeric"
-                                    autoComplete="off"
-                                    maxLength={4}
-                                    autoFocus
-                                    value={transferPin}
-                                    onChange={(e) => {
+                                        <span className="text-xs font-semibold uppercase tracking-wider text-[#7b7085]">
+                                            Amount
+                                        </span>
 
-                                        const value =
-                                            e.target.value
-                                                .replace(/\D/g, '')
-                                                .slice(0, 4);
+                                        <span className="text-lg font-bold text-[#42117f]">
+                                            {formatCurrency(
+                                                form.data.amount
+                                            )}
+                                        </span>
 
-                                        setTransferPin(value);
-                                        setPinError('');
+                                    </div>
 
-                                    }}
-                                    onKeyDown={(e) => {
+                                    <div className="mt-3 flex items-center justify-between">
 
-                                        if (e.key === 'Enter') {
-                                            confirmPin();
+                                        <span className="text-xs font-semibold uppercase tracking-wider text-[#7b7085]">
+                                            Recipient
+                                        </span>
+
+                                        <span className="max-w-[190px] truncate text-sm font-semibold text-[#3f3848]">
+                                            {form.data.recipient_name}
+                                        </span>
+
+                                    </div>
+
+                                    <div className="mt-3 flex items-center justify-between">
+
+                                        <span className="text-xs font-semibold uppercase tracking-wider text-[#7b7085]">
+                                            Bank
+                                        </span>
+
+                                        <span className="max-w-[190px] truncate text-sm font-semibold text-[#3f3848]">
+                                            {form.data.bank_name}
+                                        </span>
+
+                                    </div>
+
+                                </div>
+
+                                {/* PIN */}
+
+                                <div className="mt-6">
+
+                                    <label className="mb-2 block text-sm font-semibold text-[#393344]">
+                                        4-Digit Transfer PIN
+                                    </label>
+
+                                    <div className="relative">
+
+                                        <input
+                                            autoFocus
+                                            type={
+                                                showPin
+                                                    ? 'text'
+                                                    : 'password'
+                                            }
+                                            inputMode="numeric"
+                                            maxLength={4}
+                                            value={
+                                                form.data.transfer_pin
+                                            }
+                                            onChange={(e) =>
+                                                form.setData(
+                                                    'transfer_pin',
+                                                    e.target.value.replace(
+                                                        /\D/g,
+                                                        ''
+                                                    )
+                                                )
+                                            }
+                                            onKeyDown={(e) => {
+                                                if (
+                                                    e.key === 'Enter' &&
+                                                    form.data.transfer_pin.length === 4
+                                                ) {
+                                                    confirmTransfer(e);
+                                                }
+                                            }}
+                                            className="w-full rounded-xl border border-[#d5c9df] bg-white px-5 py-4 pr-20 text-center text-2xl font-bold tracking-[0.65em] text-[#42117f] outline-none transition focus:border-[#51169a] focus:ring-4 focus:ring-[#51169a]/10"
+                                            placeholder="••••"
+                                        />
+
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                setShowPin(!showPin)
+                                            }
+                                            className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-[#51169a] hover:underline"
+                                        >
+                                            {showPin
+                                                ? 'Hide'
+                                                : 'Show'}
+                                        </button>
+
+                                    </div>
+
+                                    {form.errors.transfer_pin && (
+                                        <p className="mt-2 text-sm font-medium text-[#c43d4b]">
+                                            {form.errors.transfer_pin}
+                                        </p>
+                                    )}
+
+                                </div>
+
+                                {/* ACTIONS */}
+
+                                <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
+
+                                    <button
+                                        type="button"
+                                        onClick={closePinModal}
+                                        disabled={form.processing}
+                                        className="rounded-xl border border-[#d5d0da] bg-white px-5 py-3 text-sm font-semibold text-[#5e5768] transition hover:bg-[#f7f5f8] disabled:cursor-not-allowed disabled:opacity-50"
+                                    >
+                                        Cancel
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        onClick={confirmTransfer}
+                                        disabled={
+                                            form.processing ||
+                                            form.data.transfer_pin.length !== 4
                                         }
+                                        className="rounded-xl bg-gradient-to-r from-[#51169a] to-[#35106e] px-5 py-3 text-sm font-semibold text-white shadow-md transition hover:from-[#431180] hover:to-[#2c095d] disabled:cursor-not-allowed disabled:opacity-50"
+                                    >
+                                        {form.processing
+                                            ? 'Verifying...'
+                                            : 'Confirm Transfer'}
+                                    </button>
 
-                                    }}
-                                    placeholder="••••"
-                                    className="w-full rounded-xl border border-gray-200 bg-white px-4 py-4 text-center text-3xl font-bold tracking-[0.7em] text-gray-900 outline-none placeholder:text-gray-300 focus:border-[#51169a] focus:ring-2 focus:ring-[#51169a]/10"
-                                />
+                                </div>
 
-                                {pinError && (
-                                    <p className="mt-3 text-center text-xs font-medium text-red-500">
-                                        {pinError}
-                                    </p>
-                                )}
+                                {/* SECURITY NOTE */}
 
-                            </div>
-
-                            {/* SECURITY NOTICE */}
-
-                            <div className="mt-5 flex gap-3 rounded-xl border border-purple-100 bg-purple-50 p-4">
-
-                                <div className="shrink-0 text-[#51169a]">
+                                <div className="mt-5 flex items-start gap-2">
 
                                     <Icon
-                                        type="shield"
-                                        size={18}
+                                        type="lock"
+                                        size={15}
+                                        className="mt-0.5 shrink-0 text-[#766b82]"
                                     />
+
+                                    <p className="text-xs leading-5 text-[#766b82]">
+                                        Your PIN is verified securely.
+                                    </p>
 
                                 </div>
 
-                                <p className="text-xs leading-5 text-gray-500">
-                                    Never share your transfer PIN with anyone.
-                                    Your PIN is used to authorize this
-                                    transaction.
-                                </p>
-
                             </div>
-
-                            {/* ACTIONS */}
-
-                            <div className="mt-6 grid grid-cols-2 gap-3">
-
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setPinRequired(false);
-                                        setTransferPin('');
-                                        setPinError('');
-                                    }}
-                                    className="rounded-xl border border-gray-200 bg-white px-4 py-3.5 text-sm font-semibold text-gray-600 transition hover:bg-gray-50 hover:text-gray-900"
-                                >
-                                    Cancel
-                                </button>
-
-                                <button
-                                    type="button"
-                                    onClick={confirmPin}
-                                    disabled={transferPin.length !== 4}
-                                    className="rounded-xl bg-[#51169a] px-4 py-3.5 text-sm font-bold text-white transition hover:bg-[#431180] disabled:cursor-not-allowed disabled:opacity-40"
-                                >
-                                     Transfer
-                                </button>
-
-                            </div>
-
                         </div>
 
                     </div>
-
                 </div>
             )}
 
