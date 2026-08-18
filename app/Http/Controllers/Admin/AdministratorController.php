@@ -19,7 +19,7 @@ class AdministratorController extends Controller
             ->latest()
             ->get();
 
-        return Inertia::render('Admin/Administrators', [
+        return Inertia::render('Admin/Administrators/Index', [
             'administrators' => $administrators,
         ]);
     }

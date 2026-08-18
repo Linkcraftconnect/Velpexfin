@@ -2,7 +2,7 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\Facades\Vite;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -20,6 +20,19 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Vite::prefetch(concurrency: 3);
+        /*
+        |--------------------------------------------------------------------------
+        | Force HTTPS in production
+        |--------------------------------------------------------------------------
+        |
+        | Railway serves the application through HTTPS. This makes Laravel
+        | generate HTTPS URLs for Vite assets, routes, links, and other
+        | generated URLs instead of HTTP URLs.
+        |
+        */
+
+        if (app()->environment('production')) {
+            URL::forceScheme('https');
+        }
     }
 }
